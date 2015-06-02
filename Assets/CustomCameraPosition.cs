@@ -5,7 +5,7 @@ public class CustomCameraPosition : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		InvokeRepeating("TeleportRandomly", 2, 1);
+		InvokeRepeating("TeleportRandomly", 2, 3);
 	}
 	
 	// Update is called once per frame
