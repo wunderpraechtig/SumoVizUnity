@@ -7,39 +7,22 @@ public class FileLoader : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
 		GeometryLoader gl = GameObject.Find("GeometryLoader").GetComponent<GeometryLoader>();
 		gl.setTheme (new NatureThemingMode ());
 
-		string path = "";
-		if (Application.platform == RuntimePlatform.OSXEditor) {
-			path = "Data/";
-		} else if (Application.platform == RuntimePlatform.OSXPlayer) {
-			path = "../../";
-		} else if (Application.platform == RuntimePlatform.WindowsEditor) {
-			path = "Data/";
-		} else if (Application.platform == RuntimePlatform.WindowsPlayer) {
-			path = "../";
-		}
-		
-		loadPedestrianFile(path + "b090_combined.txt");
-		loadGeometryFile (path + "geometry.txt");
-
+		loadPedestrianFile("SimOutput/b090_combined");
+		loadGeometryFile("SimOutput/geometry");
 	}
 	
 	// Update is called once per frame
-	void Update () {
-	
-	}
+	void Update () {}
 
-	void loadPedestrianFile(string filename) {
-		var sr = new StreamReader(Application.dataPath + "/" + filename);
-		var fileContents = sr.ReadToEnd();
-		sr.Close();
+	void loadPedestrianFile(string assetName) {
+		var fileContents = Resources.Load (assetName) as TextAsset;
 
 		PedestrianLoader pl = GameObject.Find("PedestrianLoader").GetComponent<PedestrianLoader>();
 
-		string[] lines = fileContents.Split("\n"[0]);
+		string[] lines = fileContents.text.Split("\n"[0]);
 		foreach (string line in lines) {
 			string[] v = line.Split(' ');
 			if (v.Length>=3) {
@@ -59,12 +42,10 @@ public class FileLoader : MonoBehaviour {
 		pl.createPedestrians ();
 	}
 
-	void loadGeometryFile(string filename) {
-		var sr = new StreamReader(Application.dataPath + "/" + filename);
-		var fileContents = sr.ReadToEnd();
-		sr.Close();
+	void loadGeometryFile(string assetName) {
+		var fileContents = Resources.Load (assetName) as TextAsset;
 
-		string[] lines = fileContents.Split("\n"[0]);
+		string[] lines = fileContents.text.Split("\n"[0]);
 		foreach (string line in lines) {
 			string[] v = line.Split(' ');
 			if (v.Length>=3) {
