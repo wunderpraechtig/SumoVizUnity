@@ -8,7 +8,7 @@ using Vectrosity;
 
 public class PlaybackControl : MonoBehaviour {
 
-	private bool playing = true;
+	public bool playing = true;
 	public decimal current_time = 0;
 	public decimal total_time = 0;
 	/*
@@ -67,12 +67,13 @@ public class PlaybackControl : MonoBehaviour {
 		}
 		return false;
 	}
-
-	/*
+		
 	void OnGUI () {
 		playing = GUI.Toggle(new Rect(30, 25, 100, 30), playing, " PLAY");
 		current_time = (decimal) GUI.HorizontalSlider (new Rect (100, 30, 400, 30), (float) current_time, 0.0f, (float) total_time);
 
+
+		/*
 		string btnText = "show trajectories";
 		if (trajectoriesShown) btnText = "hide trajectories";
 
@@ -130,14 +131,14 @@ public class PlaybackControl : MonoBehaviour {
 		if (tileColoringMode == TileColoringMode.TileColoringDensity) {
 			threshold = GUI.HorizontalSlider (new Rect (730, 55, 120, 30), threshold, 0.0f, 6.0f);
 			GUI.Label(new Rect (730, 70, 120, 30),"Threshold: "+System.Math.Round(threshold,2)+"/m²");
-		}
+		}*/
 	}
-
+	/*
 	public void lineDrawn() {
 		drawLine = false;
 		lineIsDrawn = true;
-	}
-	*/
+	}*/
+
 
 
 	void Update () {

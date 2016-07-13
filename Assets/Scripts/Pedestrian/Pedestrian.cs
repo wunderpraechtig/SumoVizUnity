@@ -163,6 +163,14 @@ public class Pedestrian : MonoBehaviour {
 	}
 
 	void Update () {
+
+		/* // TODO
+		if (pc.playing) {
+			animation.Play ();
+		} else {
+			animation.Stop ();
+		}*/
+
 		if (!targetReached) {
 			if (showPed ())
 				rendererEnabled (true);
