@@ -17,6 +17,7 @@ The software is licensed under the [MIT License](LICENSE.txt):
 2. Import trajectory file in `JuPedSim` format
 3. Add file explorer in order to choose new files
   - reset scene 
+4.  3D geometries (different floors, stairs etc)
 
 ### Required attribution
 
