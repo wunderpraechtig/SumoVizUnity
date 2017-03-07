@@ -4,20 +4,19 @@ using System.Collections.Generic;
 
 public class ExtrudeGeometry : Geometry  {
 
-	public static void create (string name, List<Vector2> verticesList, float height, Material topMaterial, Material sideMaterial) {
+	public static void create (string name, List<Vector2> verticesList, float height, float zOffset, Material topMaterial, Material sideMaterial) {
 
 		GameObject obstacle = new GameObject (name, typeof(MeshFilter), typeof(MeshRenderer));
 		MeshFilter mesh_filter = obstacle.GetComponent<MeshFilter> ();
 
-		obstacle.renderer.castShadows = true;
-		obstacle.transform.position = new Vector3 (0, height, 0);
-
-		obstacle.renderer.material = topMaterial;
+        //Shadows currently disabled for TopMaterial   -> switch on by    ShadowCastingMode.On
+        obstacle.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        obstacle.GetComponent<Renderer>().material = topMaterial;
 
 		Vector2[] vertices2D = verticesList.ToArray();
-		
-		// Use the triangulator to get indices for creating triangles
-		Triangulator tr = new Triangulator(vertices2D);
+
+        // Use the triangulator to get indices for creating triangles
+        Triangulator tr = new Triangulator(vertices2D);
 		int[] indicesArray = tr.Triangulate();
 		List<int> indices = new List<int>();
 		for (int i = 0;i<indicesArray.Length;i++) {
@@ -28,28 +27,27 @@ public class ExtrudeGeometry : Geometry  {
 		List<Vector3> vertices = new List<Vector3>();
 
 		for (int i=0; i<vertices2D.Length; i++) {
-			vertices.Add (new Vector3(vertices2D[i].x, 0, vertices2D[i].y));
+			vertices.Add (new Vector3(vertices2D[i].x, zOffset + height, vertices2D[i].y));
 		}
 
 		// Create the mesh
 		Mesh mesh = new Mesh();
-
-		GameObject walls = new GameObject (name+"_walls", typeof(MeshFilter), typeof(MeshRenderer));
+        GameObject walls = new GameObject (name + "_side", typeof(MeshFilter), typeof(MeshRenderer));
 		MeshFilter mesh_filter_walls = walls.GetComponent<MeshFilter> ();
-		walls.renderer.material = sideMaterial;
+		walls.GetComponent<Renderer>().material = sideMaterial;
 
 		List<Vector2> uvs_walls = new List<Vector2>();
 		List<Vector3> vertices_walls = new List<Vector3>();
 		List<int> indices_walls = new List<int>();
 
-		foreach (Vector3 v in vertices) {;
-			vertices_walls.Add(new Vector3(v.x,v.y,v.z));
-			vertices_walls.Add(new Vector3(v.x,v.y,v.z));
-			vertices_walls.Add(new Vector3(v.x, height, v.z));
-			vertices_walls.Add(new Vector3(v.x, height, v.z));
-		}
+		foreach (Vector3 v in vertices) {
+			vertices_walls.Add(new Vector3(v.x,zOffset,v.z));
+			vertices_walls.Add(new Vector3(v.x,zOffset,v.z));
+			vertices_walls.Add(new Vector3(v.x, height + zOffset, v.z));
+            vertices_walls.Add(new Vector3(v.x, height + zOffset, v.z));
+        }
 
-		for (int i=1; i<=vertices_walls.Count; i=i+4) {
+        for (int i=1; i<=vertices_walls.Count; i=i+4) {
 			indices_walls.Add(i);
 			indices_walls.Add((i+3)%vertices_walls.Count);
 			indices_walls.Add(i+2);

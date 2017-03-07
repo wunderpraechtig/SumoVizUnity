@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using Vectrosity;
 
 public class Pedestrian : MonoBehaviour {
 	
@@ -17,9 +16,9 @@ public class Pedestrian : MonoBehaviour {
 	SortedList positions = new SortedList ();
 	Color myColor;
 	bool trajectoryVisible;
-	VectorLine trajectory;
+    
 
-	private InfoText it;
+    private InfoText it;
 	private PedestrianLoader pl;
 	private PlaybackControl pc;
 	private Renderer r;
@@ -30,7 +29,7 @@ public class Pedestrian : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		gameObject.AddComponent("BoxCollider");
+		gameObject.AddComponent<BoxCollider>();
 		transform.Rotate (0,90,0);
 		myColor = new Color (Random.value, Random.value, Random.value);
 		GetComponentInChildren<Renderer>().materials[1].color = myColor;
@@ -42,42 +41,59 @@ public class Pedestrian : MonoBehaviour {
 		r = GetComponentInChildren<Renderer>() as Renderer;
 		gl = GameObject.Find ("GeometryLoader").GetComponent<GeometryLoader> ();
 		gp = gl.groundplane;
-	}
+    }
 
 	void OnMouseDown(){
-		if (!Screen.lockCursor && !trajectoryVisible && !pc.drawLine && hideFlags!=HideFlags.HideInHierarchy) {
+		if (!Cursor.visible && !trajectoryVisible && !pc.drawLine && hideFlags!=HideFlags.HideInHierarchy) {
 			showTrajectory();
-		} else if (!Screen.lockCursor && trajectoryVisible && !pc.drawLine && hideFlags!=HideFlags.HideInHierarchy) {
+		} else if (!Cursor.visible && trajectoryVisible && !pc.drawLine && hideFlags!=HideFlags.HideInHierarchy) {
 			hideTrajectory();
 		}
 	}
 
 	public void hideTrajectory() {
-		VectorLine.Destroy(ref trajectory);
+        GameObject myLine = GameObject.Find(name + " trajectory");
+        Destroy(myLine);
 		trajectoryVisible = false;
 	}
 
-	public void showTrajectory() {
-		VectorLine.SetCamera (GameObject.Find ("Flycam").camera);
-		
-		List <Vector3> points = new List<Vector3>();
-		for (int i = 0; i<positions.Count-1; i++) {
-			PedestrianPosition a = (PedestrianPosition)positions.GetByIndex (i);
-			points.Add (new Vector3 (a.getX (), 0.01f, a.getY ()));
-		}
-		
-		trajectory = VectorLine.SetLine3D (myColor, points.ToArray());
-		trajectory.lineWidth = 3.0f;
-		pc.trajectoriesShown = true;
-		trajectoryVisible = true;
-	}
-	
-	void addTile() {
+    
+    public void showTrajectory()
+    {
+        List<Vector3> points = new List<Vector3>();
+        for (int i = 0; i < positions.Count - 1; i++)
+        {
+            PedestrianPosition a = (PedestrianPosition)positions.GetByIndex(i);
+            points.Add(new Vector3(a.getX(), a.getZ() + 0.01f, a.getY()));
+        }
+
+        GameObject myLine = new GameObject(name + " trajectory");
+        myLine.transform.position = points[1];
+        myLine.AddComponent<LineRenderer>();
+        LineRenderer lr = myLine.GetComponent<LineRenderer>();
+        
+        lr.material = new Material((Material)Resources.Load("LineMaterial", typeof(Material)));
+        lr.material.SetColor("_EmissionColor", myColor);
+        lr.material.SetColor("_Color", myColor);
+        lr.startColor = myColor;
+        lr.endColor = myColor;        
+        lr.startWidth = 0.08f;
+        lr.endWidth = 0.08f;
+        lr.numPositions = points.Count;
+        lr.SetPositions(points.ToArray());
+
+        pc.trajectoriesShown = true;
+        trajectoryVisible = true;
+    }
+
+
+
+    void addTile() {
 		float side = 1.0f;
 		tile = new GameObject ("tile"+id, typeof(MeshFilter), typeof(MeshRenderer));
 		MeshFilter mesh_filter = tile.GetComponent<MeshFilter> ();
-		tile.renderer.material = (Material) Resources.Load("Tilematerial", typeof(Material));
-		tile.renderer.material.color = Color.red;
+		tile.GetComponent<Renderer>().material = (Material) Resources.Load("Tilematerial", typeof(Material));
+		tile.GetComponent<Renderer>().material.color = Color.red;
 		Mesh mesh = new Mesh();
 		mesh.vertices = new Vector3[] {new Vector3 (-side/2, 0.01f, -side/2),new Vector3 (side/2, 0.01f, -side/2),new Vector3 (-side/2, 0.01f, side/2),new Vector3 (side/2, 0.01f, side/2)};
 		mesh.triangles = new int[] {2,1,0,1,2,3};
@@ -104,9 +120,9 @@ public class Pedestrian : MonoBehaviour {
 	void Update () {
 
 		if (pc.playing) {
-			animation.Play ();
+			GetComponent<Animation>().Play ();
 		} else {
-			animation.Stop ();
+			GetComponent<Animation>().Stop ();
 		}
 
 		int index = _getTrait(positions, pc.current_time);
@@ -115,16 +131,17 @@ public class Pedestrian : MonoBehaviour {
 			r.enabled = true;
 			PedestrianPosition pos = (PedestrianPosition)positions.GetByIndex (index);
 			PedestrianPosition pos2 = (PedestrianPosition)positions.GetByIndex (index+1);
-			start = new Vector3 (pos.getX(),0,pos.getY());
-			target = new Vector3 (pos2.getX(),0,pos2.getY());
+			start = new Vector3 (pos.getX(), pos.getZ(), pos.getY());
+			target = new Vector3 (pos2.getX(), pos2.getZ(), pos2.getY());
 			float time = (float) pc.current_time;
 			float movement_percentage = (float) time-(float)pos.getTime();
 			Vector3 newPosition = Vector3.Lerp(start,target,movement_percentage);
 
-			Vector3 relativePos = target - start;
-			speed = relativePos.magnitude;
+            // to keep pedestrians upright change in the Z Axis is excluded from rotation calculation
+            Vector3 relativePos = new Vector3(pos2.getX(), 0, pos2.getY()) - new Vector3(pos.getX(), 0, pos.getY());
+            speed = relativePos.magnitude;
 
-			animation["walking"].speed = getSpeed ();
+			GetComponent<Animation>()["walking"].speed = getSpeed ();
 			if (start!=target) transform.rotation = Quaternion.LookRotation(relativePos);
 
 			//check if line is crossed
@@ -138,10 +155,10 @@ public class Pedestrian : MonoBehaviour {
 			//Tile coloring
 			if (pc.tileColoringMode != TileColoringMode.TileColoringNone) {
 
-				tile.renderer.enabled = true;
+				tile.GetComponent<Renderer>().enabled = true;
 
 				if (pc.tileColoringMode == TileColoringMode.TileColoringSpeed) {
-					tile.renderer.material.color = ColorHelper.ColorForSpeed(getSpeed());
+					tile.GetComponent<Renderer>().material.color = ColorHelper.ColorForSpeed(getSpeed(), 1.5f);  //1.5 as average maximum walking speed when not hindered
 					it.updateSpeed(speed);
 				} else if (pc.tileColoringMode == TileColoringMode.TileColoringDensity) {
 					densityReload = (densityReload+1)%densityReloadInterval;
@@ -150,13 +167,13 @@ public class Pedestrian : MonoBehaviour {
 					}
 					float density = getDensity();
 					if (density>=pc.threshold) {
-						tile.renderer.material.color = ColorHelper.ColorForDensity(density);
+						tile.GetComponent<Renderer>().material.color = ColorHelper.ColorForDensity(density);
 					} else {
-						tile.renderer.enabled = false;
+						tile.GetComponent<Renderer>().enabled = false;
 					}
 				}
 			} else {
-				tile.renderer.enabled = false;
+				tile.GetComponent<Renderer>().enabled = false;
 			}
 
 			transform.position = newPosition;
@@ -164,7 +181,7 @@ public class Pedestrian : MonoBehaviour {
 
 		} else {
 			r.enabled = false;
-			tile.renderer.enabled = false;
+			tile.GetComponent<Renderer>().enabled = false;
 			gameObject.hideFlags = HideFlags.HideInHierarchy;
 		}
 	}
@@ -206,7 +223,7 @@ public class Pedestrian : MonoBehaviour {
 	
 
 	public float getSpeed() {
-		return speed;
+		return speed*2;
 	}
 
 	// http://www.stefanbader.ch/faster-line-segment-intersection-for-unity3dc/
@@ -292,7 +309,8 @@ public class Pedestrian : MonoBehaviour {
 		this.id = id;
 		densityReload = id % densityReloadInterval;
 		this.name = "Pedestrian "+id;
-	}
+        
+    }
 
 	public void setPositions(SortedList p) {
 		positions.Clear();
@@ -300,10 +318,6 @@ public class Pedestrian : MonoBehaviour {
 			positions.Add(ped.getTime(),ped);
 		}
 		PedestrianPosition pos = (PedestrianPosition)p.GetByIndex (0);
-		transform.position = new Vector3 (pos.getX(),0,pos.getY());
+		transform.position = new Vector3 (pos.getX(),pos.getZ(),pos.getY());
 	}
-
-
-
-
 }

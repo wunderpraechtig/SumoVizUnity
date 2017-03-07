@@ -12,9 +12,19 @@ public class CityThemingMode : ThemingMode {
 	public override Material getWallsMaterial ()
 	{
 		return (Material) Resources.Load("WallCity", typeof(Material));
-	}
+	} 
 
-	public override Material getBoxMaterial ()
+    public override Material getWallsMaterialST()
+    {
+        return (Material)Resources.Load("WallSeeThrough", typeof(Material));
+    }
+
+    public override Material getWallsGlow()
+    {
+        return (Material)Resources.Load("TopGlow", typeof(Material));
+    }
+
+    public override Material getBoxMaterial ()
 	{
 		return (Material)Resources.Load ("Woodbox", typeof(Material));
 	}

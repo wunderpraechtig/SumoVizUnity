@@ -71,7 +71,7 @@ public class FundamentalDiagram : MonoBehaviour {
 		InfoText it = GameObject.Find ("InfoText").GetComponent<InfoText> ();
 		if (it.diagram) it.removeDiagram();
 
-		fundamentalDiagramLines = new List<VectorLine> ();
+        fundamentalDiagramLines = new List<VectorLine> ();
 		PedestrianLoader pl = GameObject.Find ("PedestrianLoader").GetComponent<PedestrianLoader> ();
 		float maxSpeed = float.MinValue;
 		float maxDensity = float.MinValue;
@@ -92,7 +92,7 @@ public class FundamentalDiagram : MonoBehaviour {
 			return;
 		}
 
-		VectorPoints.SetCamera (GameObject.Find ("Flycam").camera);
+		VectorPoints.SetCamera (GameObject.Find ("Flycam").GetComponent<Camera>());
 
 		//trendline
 		
@@ -122,7 +122,8 @@ public class FundamentalDiagram : MonoBehaviour {
 			line.MakeSpline (l.ToArray ());
 			line.depth = 99;
 			line.Draw ();
-			fundamentalDiagramLines.Add (line);
+            fundamentalDiagramLines.Add (line);
+
 		}
 
 

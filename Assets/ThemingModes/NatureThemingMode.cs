@@ -14,7 +14,17 @@ public class NatureThemingMode : ThemingMode {
 		return (Material) Resources.Load("WallNature", typeof(Material));
 	}
 
-	public override Material getBoxMaterial ()
+    public override Material getWallsMaterialST()
+    {
+        return (Material)Resources.Load("WallNature", typeof(Material));
+    }
+
+    public override Material getWallsGlow()
+    {
+        return (Material)Resources.Load("TopGlow", typeof(Material));
+    }
+
+    public override Material getBoxMaterial ()
 	{
 		return (Material) Resources.Load("Woodbox", typeof(Material));
 	}

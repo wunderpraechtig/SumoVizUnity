@@ -10,7 +10,9 @@ public abstract class ThemingMode : Object {
 
 	public abstract string getTerrainName();
 	public abstract Material getWallsMaterial();
-	public abstract Material getBoxMaterial();
+    public abstract Material getWallsMaterialST();
+    public abstract Material getWallsGlow();
+    public abstract Material getBoxMaterial();
 	public abstract Material getHouseMaterial();
 	public abstract Material getRoofMaterial();
 	public abstract Vector2 getTextureScaleForHeight (float height);
