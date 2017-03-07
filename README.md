@@ -1,6 +1,10 @@
 ﻿# SumoVizUnity
 
-3D visualisztion of trajectories and geometries of crowd simulation software (Optimzed for `JuPedSim`)
+3D visualization of trajectories and geometries of crowd simulation software (Optimzed for `JuPedSim` and 3D Geometries)
+
+![alt text](https://raw.githubusercontent.com/FabianPlum/SumoVizUnity/master/Example_1.png "Preview of SumoVizUnity JPS")
+
+![alt text](https://raw.githubusercontent.com/FabianPlum/SumoVizUnity/master/Example_2.jpg "Multilayer geometries supported")
 
 
 ## License
