@@ -1,0 +1,212 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using System.Linq;
+
+public class StairExtrudeGeometry : Geometry
+{
+
+    public static void create(string name, List<Vector2> coordFirst, List<Vector2> coordSecond, float A_x, float B_y, float C_z, float pxUp, float pyUp, float pxDown, float pyDown)
+    {
+
+        Material topMaterial;
+        Material sideMaterial;
+
+        GeometryLoader gl = GameObject.Find("GeometryLoader").GetComponent<GeometryLoader>();
+
+        sideMaterial = gl.theme.getWallsMaterialST();
+        topMaterial = gl.theme.getWallsMaterial();
+
+        double zDownTemp = System.Math.Round(A_x * pxDown + B_y * pyDown + C_z, 2);
+        float zDown = (float)zDownTemp;
+        double zUpTemp = System.Math.Round(A_x * pxUp + B_y * pyUp + C_z, 2);
+        float zUp = (float)zUpTemp;
+
+
+        Vector2[] verticesFirst = coordFirst.ToArray();
+        Vector2[] verticesSecond = coordFirst.ToArray();
+
+        GameObject stair = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
+        MeshFilter mesh_filter = stair.GetComponent<MeshFilter>();
+        Mesh mesh = mesh_filter.mesh;
+        mesh.Clear();
+
+        stair.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+        stair.GetComponent<Renderer>().material = topMaterial;
+
+        /*
+         p0    new Vector3(coordFirst[0].x, zDown - 0.3f, coordFirst[0].y),
+         p1    new Vector3(coordSecond[0].x, zDown - 0.3f, coordSecond[0].y),
+         p2    new Vector3(coordSecond[1].x, zUp - 0.3f, coordSecond[1].y),
+         p3    new Vector3(coordFirst[1].x, zUp - 0.3f, coordFirst[1].y),
+         p4    new Vector3(coordFirst[0].x, zDown, coordFirst[0].y),
+         p5    new Vector3(coordSecond[0].x, zDown, coordSecond[0].y),
+         p6    new Vector3(coordSecond[1].x, zUp, coordSecond[1].y),
+         p7    new Vector3(coordFirst[1].x, zUp, coordFirst[1].y)
+         * /
+
+        #region Vertices
+        Vector3[] edgeArray = new[] {
+             new Vector3(coordFirst[0].x, zDown - 0.3f, coordFirst[0].y),
+             new Vector3(coordSecond[0].x, zDown - 0.3f, coordSecond[0].y),
+             new Vector3(coordSecond[1].x, zUp - 0.3f, coordSecond[1].y),
+             new Vector3(coordFirst[1].x, zUp - 0.3f, coordFirst[1].y),
+             new Vector3(coordFirst[0].x, zDown, coordFirst[0].y),
+             new Vector3(coordSecond[0].x, zDown, coordSecond[0].y),
+             new Vector3(coordSecond[1].x, zUp, coordSecond[1].y),
+             new Vector3(coordFirst[1].x, zUp, coordFirst[1].y)
+         };
+
+        Vector3[] vertices = new Vector3[]
+        {
+	// Bottom
+	edgeArray[0], edgeArray[1], edgeArray[2], edgeArray[3],
+ 
+	// Left
+	edgeArray[7], edgeArray[4], edgeArray[0], edgeArray[3],
+ 
+	// Front
+	edgeArray[4], edgeArray[5], edgeArray[1], edgeArray[0],
+ 
+	// Back
+	edgeArray[6], edgeArray[7], edgeArray[3], edgeArray[2],
+ 
+	// Right
+	edgeArray[5], edgeArray[6], edgeArray[2], edgeArray[1],
+ 
+	// Top
+	edgeArray[7], edgeArray[6], edgeArray[5], edgeArray[4]
+        };
+        #endregion
+
+        #region Normales
+        Vector3 up = Vector3.up;
+        Vector3 down = Vector3.down;
+        Vector3 front = Vector3.forward;
+        Vector3 back = Vector3.back;
+        Vector3 left = Vector3.left;
+        Vector3 right = Vector3.right;
+
+        Vector3[] normales = new Vector3[]
+        {
+	// Bottom
+	down, down, down, down,
+ 
+	// Left
+	left, left, left, left,
+ 
+	// Front
+	front, front, front, front,
+ 
+	// Back
+	back, back, back, back,
+ 
+	// Right
+	right, right, right, right,
+ 
+	// Top
+	up, up, up, up
+        };
+        #endregion
+
+        #region UVs
+        Vector2 _00 = new Vector2(0f, 0f);
+        Vector2 _10 = new Vector2(1f, 0f);
+        Vector2 _01 = new Vector2(0f, 1f);
+        Vector2 _11 = new Vector2(1f, 1f);
+
+        Vector2[] uvs = new Vector2[]
+        {
+	// Bottom
+	_11, _01, _00, _10,
+ 
+	// Left
+	_11, _01, _00, _10,
+ 
+	// Front
+	_11, _01, _00, _10,
+ 
+	// Back
+	_11, _01, _00, _10,
+ 
+	// Right
+	_11, _01, _00, _10,
+ 
+	// Top
+	_11, _01, _00, _10,
+        };
+        #endregion
+
+        #region Triangles
+        int[] triangles = new int[]
+        {
+	// Bottom
+	3, 1, 0,
+    3, 2, 1,			
+ 
+	// Left
+	3 + 4 * 1, 1 + 4 * 1, 0 + 4 * 1,
+    3 + 4 * 1, 2 + 4 * 1, 1 + 4 * 1,
+ 
+	// Front
+	3 + 4 * 2, 1 + 4 * 2, 0 + 4 * 2,
+    3 + 4 * 2, 2 + 4 * 2, 1 + 4 * 2,
+ 
+	// Back
+	3 + 4 * 3, 1 + 4 * 3, 0 + 4 * 3,
+    3 + 4 * 3, 2 + 4 * 3, 1 + 4 * 3,
+ 
+	// Right
+	3 + 4 * 4, 1 + 4 * 4, 0 + 4 * 4,
+    3 + 4 * 4, 2 + 4 * 4, 1 + 4 * 4,
+ 
+	// Top
+	3 + 4 * 5, 1 + 4 * 5, 0 + 4 * 5,
+    3 + 4 * 5, 2 + 4 * 5, 1 + 4 * 5,
+
+        };
+        #endregion
+
+        mesh = TangentHelper.TangentSolver(mesh);
+        mesh.vertices = vertices;
+        mesh.normals = normales;
+        mesh.uv = uvs;
+        mesh.triangles = triangles;
+        // mesh.triangles = mesh.triangles.Reverse().ToArray();   (flip if inside out)
+
+        /* TRY THIS TOMORROW:
+        http://answers.unity3d.com/questions/15978/determine-whether-or-not-model-is-inside-out.html
+        http://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order/1165943#1165943
+
+         Check whether vertices are connect clockwise, flip otherwise.
+        */
+        if (PolygonIsClockwise(edgeArray)== false)
+        {
+            mesh.triangles = mesh.triangles.Reverse().ToArray();
+            Debug.Log(name + " Flipped");
+        }   else
+        {
+            Debug.Log(name + " Normal");
+        }
+
+        mesh.RecalculateBounds();
+    }
+
+    static bool PolygonIsClockwise(params Vector3[] points)
+    {
+        int l = points.Length / 2;
+
+        float sum = 0f;
+
+        for (int i = 0; i < l; i++)
+        {
+            int n = i + 1 >= l - 1 ? 0 : i + 1;
+
+            float x = points[n].x - points[i].x;
+            float y = points[n].y + points[i].y;
+            sum += (x * y);
+        }
+
+        return (sum < 0) ? false : true;
+    }
+}

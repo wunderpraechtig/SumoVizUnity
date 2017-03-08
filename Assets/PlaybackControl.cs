@@ -28,8 +28,8 @@ public class PlaybackControl : MonoBehaviour {
 		
 		public Label (Rect r, string s)
 		{
-			label = s;
-			rect = r;
+            rect = r;
+            label = s;
 		}
 	}
 

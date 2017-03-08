@@ -1,45 +1,43 @@
-# SumoVizUnity
+﻿# SumoVizUnity
 
-This repository includes the full source-code of the Unity3D project developed during my master thesis. More information on the thesis can be found on [my blog](http://buechele.cc/blog/2014/8/6/master-thesis-post-visualization-of-pedestrian-simulation-data-using-a-game-engine).
+3D visualization of trajectories and geometries of crowd simulation software (Optimized for `JuPedSim` and 3D Geometries)
 
-The Unity project was tested and developed for use on Mac OS and Windows. Ready-to-run executables, including some demonstration-data can be downloaded from the releases-section.
+![alt text](https://raw.githubusercontent.com/FabianPlum/SumoVizUnity/master/Example_1.png "Preview of SumoVizUnity JPS")
 
-## Features
-The software takes simulation-data (in this implementation from a text-file) and geometry-data and creates a 3D visualization in real-time. Moreover, it offers tools to analyze trajectories, density, population and speed, create measuring lines and drawing fundamental diagrams.
+![alt text](https://raw.githubusercontent.com/FabianPlum/SumoVizUnity/master/Example_2.JPG "Multilayer geometries supported")
 
-![Screenshot](https://raw.githubusercontent.com/danielbuechele/SumoVizUnity/master/Screenshot.png)
 
 ## License
-The software is licensed under the [MIT license](http://opensource.org/licenses/MIT). If this software is used anywhere, I would be more than curios to know and will be happy to help with any problems!
 
-## Thesis
+The software is licensed under the [MIT License](LICENSE.txt):
 
-My thesis "Post-visualization of pedestrian simulation data using a game-engine" was written in 2014 at Technische Universität München. The full PDF-file can be downloaded [here](http://buechele.cc/s/thesis.pdf) (German). And includes the following chapters:
+> The MIT License is a permissive license that is short and to the point. It lets people do anything they want with your code as long as they provide attribution back to you and don’t hold you liable.
 
-1. Einführung
-  1. Vorhersage von menschlichem Verhalten
-  2. Fußgängerforschung als interdisziplinäres Forschungsfeld
-  3. Motivation und Ziele der Arbeit
-2. Fußgängersimulation
-  1. Modellierungsebenen bei der Fußgängersimulation
-  2. Modellierungsmethoden zur Fußgängersimulation
-  3. Aufzeichnung realer Daten
-  4. ParameterundMessgrößenfürSimulationen
-  5. Bestehende Systeme zur Post-Visualiserung
-3. Implementierung einer Post-Visualisierung für Fußgängersimulationsdaten
-  1. Neuimplementierung von SumoViz3D
-  2. Nutzung von Game-Engines für wissenschaftliche Visualisierungen
-  3. VerwandteArbeiten
-4. Implementierung der Visualisierung auf Basis einer Game-Engine
-  1. ImportderSimulationsergebnisse
-  2. DarstellungderGeometrie
-  3. SteuerungdesVisualisierung
-  4. DarstellungderFußgänger
-  5. Implementierung der Analysewerkzeuge
-5. Ausblick und Fazit
-  1. Vergleich zur Bachelorarbeit
-  2. Möglichkeiten der Weiterentwicklung
-  3. Fazit
+*source: [choosealicense.com](http://www.choosealicense.com/)*
 
-## SumoViz3D
-This work builds upon my Bachelor's thesis on WebGL-based post-visualization, which can be found [here](https://github.com/danielbuechele/SumoViz3D).
+## New in this Version (JPS)
+
+1. Import geometry file in `JuPedSim` format
+2. Import trajectory file in `JuPedSim` format
+3. Added file explorer in order to choose new files
+4.  3D geometries (different floors, stairs, etc)
+5.  Redesign of Textures and Materials
+6.  3D trajectoriy Lines can now be displayed
+
+## Todo
+- Change trajectory line color based on walking speed
+- Create a standalone version (create new File-explorer, current version only works through Utility Library in Unity)
+- Fix "Fundamental Diagram" (Materials are outdated)
+- Display pedestrian information as text next to each pedestrian (e.g. ID, height, etc)
+- Export the results of the fundamental diagram
+
+### Required attribution
+
+> additions by Fabian Plum (2017)
+> Copyright (c) 2014 Daniel Büchele
+
+
+### Restrictions
+
+The license above does not apply to and no license is granted for any Military Use.
+

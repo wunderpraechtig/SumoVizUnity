@@ -1,0 +1,144 @@
+﻿using UnityEngine;
+using System.IO;
+using System.Collections;
+using System.Collections.Generic;
+using System.Xml;
+using System;
+using UnityEditor;
+
+public class FileLoader : MonoBehaviour
+{
+
+    // Use this for initialization
+    void Start()
+    {
+
+        GeometryLoader gl = GameObject.Find("GeometryLoader").GetComponent<GeometryLoader>();
+        gl.setTheme(new NatureThemingMode());
+
+        var GeometryXML = EditorUtility.OpenFilePanel(
+            "Load Geometry", "", "xml");
+
+        var TrajectoryXML = EditorUtility.OpenFilePanel(
+            "Load Trajectory", "", "xml");
+
+        loadPedestrianFile(TrajectoryXML);
+        loadGeometryFile(GeometryXML);
+    }
+
+    // Update is called once per frame
+    void Update() { }
+
+    void loadGeometryFile(string filename)
+    {
+
+        if (!System.IO.File.Exists(filename))
+        {
+            Debug.Log("Error: File " + filename + " not found.");
+            return;
+        }
+
+        XmlDocument xmlDocGeo = new XmlDocument();
+        xmlDocGeo.LoadXml(System.IO.File.ReadAllText(filename));
+
+        XmlNode geometry = xmlDocGeo.SelectSingleNode("//geometry");
+        foreach (XmlElement rooms in geometry.SelectNodes("//rooms"))
+        {
+            foreach (XmlElement room in geometry.SelectNodes("//room"))
+            {
+                foreach (XmlElement subroom in room.SelectNodes("subroom[@class='subroom']"))
+                {
+                    float height = 2.5f;
+                    float zOffset = TryParseWithDefault.ToSingle(subroom.GetAttribute("C_z"), 0.2f);
+
+                    foreach (XmlElement openWall in subroom.SelectNodes("polygon[@caption='wall']"))
+                        WallExtrudeGeometry.create(openWall.GetAttribute("caption"), parsePoints(openWall), height, 0.2f, zOffset);
+
+                    foreach (XmlElement wall in subroom.SelectNodes("polygon[@caption='obstacle']"))
+                        ObstacleExtrudeGeometry.create(wall.GetAttribute("caption"), parsePoints(wall), height, zOffset);
+
+                    foreach (XmlElement area in subroom.SelectNodes("polygon[@caption='origin'" +
+                                                                    "or @caption='destination' " +
+                                                                    "or @caption='scaledArea' " +
+                                                                    "or @caption='waitingZone' " +
+                                                                    "or @caption='portal' " +
+                                                                    "or @caption='beamExit' " +
+                                                                    "or @caption='eofWall' " +
+                                                                    "or @caption='oben' " +
+                                                                    "or @caption='unten' " +
+                                                                    "or @caption='queuingArea']"))
+                        AreaGeometry.create(area.GetAttribute("caption"), parsePoints(area));
+                }
+                foreach (XmlElement subroom in room.SelectNodes("subroom[@class='stair']"))
+                {
+                    float height = 2.5f;
+                    float zOffsetTEMP = 3;
+                    float zOffset = TryParseWithDefault.ToSingle(subroom.GetAttribute("C_z"), 0.2f);
+
+                    foreach (XmlElement openWall in subroom.SelectNodes("polygon[@caption='wall']"))
+                        WallExtrudeGeometry.create(openWall.GetAttribute("caption"), parsePoints(openWall), height, -0.2f, zOffsetTEMP);
+                } 
+            }
+        }
+
+    }
+
+    void loadPedestrianFile(string filename)
+    {
+        if (!System.IO.File.Exists(filename))
+        {
+            Debug.Log("Error: File " + filename + " not found.");
+            return;
+        }
+
+        XmlDocument xmlDocTraj = new XmlDocument();
+        xmlDocTraj.LoadXml(System.IO.File.ReadAllText(filename));
+
+        PedestrianLoader pl = GameObject.Find("PedestrianLoader").GetComponent<PedestrianLoader>();
+
+        XmlNode trajectories = xmlDocTraj.SelectSingleNode("//trajectories");
+
+        foreach (XmlElement frame in trajectories.SelectNodes("frame"))
+        {
+            int fps = 8, FrameID;
+            
+            int.TryParse(frame.GetAttribute("ID"), out FrameID);
+
+            if (FrameID % fps == 0)
+            {
+                foreach (XmlElement agent in frame)
+                {
+                    decimal time;
+                    int id;
+                    float x;
+                    float y;
+                    float z;
+                    decimal.TryParse(frame.GetAttribute("ID"), out time);
+                    int.TryParse(agent.GetAttribute("ID"), out id);
+                    float.TryParse(agent.GetAttribute("x"), out x);
+                    float.TryParse(agent.GetAttribute("y"), out y);
+                    float.TryParse(agent.GetAttribute("z"), out z);
+                    pl.addPedestrianPosition(new PedestrianPosition(id, time / fps, x, y, z));
+                }
+            }
+        }
+        pl.createPedestrians();
+
+    }
+    static List<Vector2> parsePoints(XmlElement polyPoints)
+    {
+        List<Vector2> list = new List<Vector2>();
+
+        foreach (XmlElement vertex in polyPoints.SelectNodes("vertex"))
+        {
+            float x;
+            float y;
+            if (float.TryParse(vertex.GetAttribute("px"), out x) && float.TryParse(vertex.GetAttribute("py"), out y))
+            {
+                list.Add(new Vector2(x, y));
+            }
+        }
+
+        return list;
+    }
+}

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class ObstacleExtrudeGeometry : ExtrudeGeometry  {
 
-	public static void create  (string name, List<Vector2> verticesList, float height) {
+	public static void create  (string name, List<Vector2> verticesList, float height, float zOffset) {
 
 		Material topMaterial;
 		Material sideMaterial;
@@ -20,7 +20,7 @@ public class ObstacleExtrudeGeometry : ExtrudeGeometry  {
 			sideMaterial.SetTextureScale("_MainTex",gl.theme.getTextureScaleForHeight((float)height));
 		}
 
-		ExtrudeGeometry.create (name, verticesList, height, topMaterial, sideMaterial);
+		ExtrudeGeometry.create (name, verticesList, height, zOffset, topMaterial, sideMaterial);
 	}
 }
 

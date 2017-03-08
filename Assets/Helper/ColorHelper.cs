@@ -3,8 +3,13 @@ using System.Collections;
 
 public class ColorHelper {
 
-	public static Color ColorForSpeed(float speed) {
-		return ColorFromHSV((-speed*55+360)%360,1,1,1);
+	public static Color ColorForSpeed(float speed, float maxSpeed) {
+        if (speed > maxSpeed)
+        {
+            maxSpeed = speed;   //dynamic range for velocities greater than 1.5 m/s
+        }
+        float ColorOutputValue = (140 / maxSpeed) * speed;
+		return ColorFromHSV((ColorOutputValue+360)%360,1,1,1);
 	}
 
 	public static Color ColorForDensity(float density) {
