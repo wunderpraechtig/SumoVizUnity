@@ -76,24 +76,6 @@ public class FileLoader : MonoBehaviour
 						}
 					}
 				
-//
-//					foreach (XmlElement area in subroom.SelectNodes("polygon[@caption='origin'" +						                                                "or @caption='destination' " +
-//                                                                    "or @caption='scaledArea' " +
-//                                                                    "or @caption='waitingZone' " +
-//                                                                    "or @caption='beamExit' " +
-//                                                                    "or @caption='eofWall' " +
-//                                                                    "or @caption='oben' " +
-//                                                                    "or @caption='unten']"))
-//                    {
-//                        AreaGeometry.create(area.GetAttribute("caption") + (" ") + wallNr, parsePoints(area));
-//                        wallNr++;
-//                    }  
-//					foreach (XmlElement area in subroom.SelectNodes("Transition[]"))
-//					{
-//						AreaGeometry.create(area.GetAttribute("caption") + (" ") + wallNr, parsePoints(area));
-//						wallNr++;
-//					} 
-
 
 
 					FloorExtrudeGeometry.create("floor " + floorNr, parsePoints_floor(subroom), zOffset);//here is creating floor?
@@ -274,14 +256,10 @@ public class FileLoader : MonoBehaviour
 		
 	static List<Vector2> SortNodes(ref List<Vector2> PointSet)//, List<Node> ch
 	{
-
-	   //	int i,j = 0;//top = 2;
-
-
 		// remove same nodes.
-		for ( int i = 0; i < PointSet.Count; i++)  //外循环是循环的次数
+		for ( int i = 0; i < PointSet.Count; i++)  //loop num 
 		{
-			for ( int j = PointSet.Count - 1 ; j > i; j--)  //内循环是 外循环一次比较的次数
+			for ( int j = PointSet.Count - 1 ; j > i; j--)  //comparison num 
 			{
 
 				if (PointSet[i].x == PointSet[j].x&&PointSet[i].y==PointSet[j].y)
