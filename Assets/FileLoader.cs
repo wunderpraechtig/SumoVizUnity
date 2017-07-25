@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
@@ -19,12 +19,14 @@ public class FileLoader : MonoBehaviour
         var TrajectoryXML = EditorUtility.OpenFilePanel(
             "Load Trajectory", "", "xml");
 
-        loadPedestrianFile(TrajectoryXML);
+         loadPedestrianFile(TrajectoryXML);
         loadGeometryFile(GeometryXML);
     }
 
     // Update is called once per frame
     void Update() { }
+
+
 
     void loadGeometryFile(string filename)
     {
@@ -94,7 +96,7 @@ public class FileLoader : MonoBehaviour
 
 
 
-					//FloorExtrudeGeometry.create("floor " + floorNr, parsePoints_floor(subroom), zOffset);//here is creating floor?
+					FloorExtrudeGeometry.create("floor " + floorNr, parsePoints_floor(subroom), zOffset);//here is creating floor?
                     floorNr++;
                 }
                 foreach (XmlElement subroom in room.SelectNodes("subroom[@class='stair' or @class ='Stair'"
@@ -208,7 +210,7 @@ public class FileLoader : MonoBehaviour
 			}
 		}
 
-		SortNodes(list);
+		list = SortNodes(ref list);
 
 		return list;
 	}
@@ -267,15 +269,19 @@ public class FileLoader : MonoBehaviour
         }
         pl.createPedestrians();
     }
+
+
 		
-	static List<Vector2> SortNodes(List<Vector2> PointSet)//, List<Node> ch
+	static List<Vector2> SortNodes(ref List<Vector2> PointSet)//, List<Node> ch
 	{
 
-		int i,j,k = 0;//top = 2;
+	   //	int i,j = 0;//top = 2;
 
-		for ( i = 0; i < PointSet.Count; i++)  //外循环是循环的次数
+
+		// remove same nodes.
+		for ( int i = 0; i < PointSet.Count; i++)  //外循环是循环的次数
 		{
-			for ( j = PointSet.Count - 1 ; j > i; j--)  //内循环是 外循环一次比较的次数
+			for ( int j = PointSet.Count - 1 ; j > i; j--)  //内循环是 外循环一次比较的次数
 			{
 
 				if (PointSet[i].x == PointSet[j].x&&PointSet[i].y==PointSet[j].y)
@@ -286,66 +292,21 @@ public class FileLoader : MonoBehaviour
 			}
 		}
 
-
-
-
-
-
-		Vector2 tmp; int n = PointSet.Count;
-		for (i = 0; i < n; i++)
-		{
-			for (j = i + 1; j < n; j++)
-				if (PointSet[i].x == PointSet[j].x && PointSet[i].y == PointSet[j].y)
-				{
-					PointSet.Remove(PointSet[i]);
-					n = PointSet.Count;
-				}
-
-
+	
+		ConvexAogrithm ca = new ConvexAogrithm(PointSet); 
+		Vector2 p; 
+		ca.GetNodesByAngle(out p); 
+		Stack<Vector2> p_nodes = ca.SortedNodes; 
+		PointSet.Clear ();
+		Vector2[] vlist = new Vector2[1];
+		vlist = p_nodes.ToArray ();
+		for (int m = 0; m < vlist.Length; m++) {
+			PointSet.Add (vlist [m]);
 		}
 
 
-		// 选取PointSet中y坐标最小的点PointSet[k]，如果这样的点有多个，则取最左边的一个   
-		for (i = 1; i < n; i++)
-			if (PointSet[i].y < PointSet[k].y || (PointSet[i].y == PointSet[k].y)
-				&& (PointSet[i].x < PointSet[k].x))
-				k = i;
-		tmp = PointSet[0];
-		PointSet[0] = PointSet[k];
-		PointSet[k] = tmp; // 现在PointSet中y坐标最小的点在PointSet[0]   
-		//  对顶点按照相对PointSet[0]的极角从小到大进行排序，  
-		//  极角相同的按照距离PointSet[0]从近到远进行排序  
-		for (i = 1; i < n - 1; i++)
-		{
-			k = i;
-			for (j = i + 1; j < n; j++)
-				if (multiply(PointSet[j], PointSet[k], PointSet[0]) > 0 ||  // 极角更小      
-					(multiply(PointSet[j], PointSet[k], PointSet[0]) == 0) && /* 极角相等，距离更短 */
-					distance(PointSet[0], PointSet[j]) < distance(PointSet[0], PointSet[k]))
-					k = j;
-			tmp = PointSet[i];
-			PointSet[i] = PointSet[k];
-			PointSet[k] = tmp;
-		}
-		//ch[0] = PointSet[0];
-		//ch[1] = PointSet[1];
-		//ch[2] = PointSet[2];
-		//for (i = 3; i < n; i++)
-		//{
-		//    while (multiply(PointSet[i].Location, ch[top].Location, ch[top - 1].Location) >= 0)
-		//        top--;
-		//    ch[++top] = PointSet[i];
-		//}
 		return PointSet;
+	
 	}
-	static double multiply(Vector2 begPnt, Vector2 endPnt, Vector2 nextPnt)
-	{
-		return ((nextPnt.x - begPnt.x) * (endPnt.y - begPnt.y) - (endPnt.x - begPnt.x) * (nextPnt.y - begPnt.y));
-	}
-	static double distance(Vector2 pnt1, Vector2 pnt2)
-	{
-		return System.Math.Sqrt((pnt2.x - pnt1.x) * (pnt2.x - pnt1.x) + (pnt2.y - pnt1.y) * (pnt2.y - pnt1.y));
-	}
-
 
 }
