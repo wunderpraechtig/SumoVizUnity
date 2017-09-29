@@ -51,9 +51,10 @@ public class FileLoader : MonoBehaviour
             {
                 foreach (XmlElement subroom in room.SelectNodes("subroom[@class='subroom'" +
                 													" or @class = 'Office' " +
+																	" or @class = 'Not specified' " +
                 													" or @class='Corridor']"))
                 {   
-                    float height = 0.5f;
+                    float height = 1.0f;
                     float zOffset = TryParseWithDefault.ToSingle(subroom.GetAttribute("C_z"), 0);       //EXCEPTION: sometimes "C_z" is referred to as "C"
 
                     if (zOffset == 0)
