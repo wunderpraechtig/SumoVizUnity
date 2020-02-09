@@ -13,14 +13,14 @@ public class FileLoader : MonoBehaviour
         GeometryLoader gl = GameObject.Find("GeometryLoader").GetComponent<GeometryLoader>();
         gl.setTheme(new LabThemingMode());
 
-        var GeometryXML = EditorUtility.OpenFilePanel(
-            "Load Geometry", "", "xml");
+        //var GeometryXML = EditorUtility.OpenFilePanel(
+        //    "Load Geometry", "", "xml");
 
-        var TrajectoryXML = EditorUtility.OpenFilePanel(
-            "Load Trajectory", "", "xml");
+        //var TrajectoryXML = EditorUtility.OpenFilePanel(
+        //    "Load Trajectory", "", "xml");
 
-         loadPedestrianFile(TrajectoryXML);
-        loadGeometryFile(GeometryXML);
+        //loadPedestrianFile(TrajectoryXML);
+        //loadGeometryFile(GeometryXML);
     }
 
     // Update is called once per frame

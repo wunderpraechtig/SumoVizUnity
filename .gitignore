@@ -61,3 +61,6 @@ crashlytics-build.properties
 *.resources
 test-results/
 Assets/Oculus/
+Assets/TextMesh Pro/
+Assets/Editor.meta
+Assets/Editor/
