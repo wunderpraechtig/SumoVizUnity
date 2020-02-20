@@ -79,9 +79,9 @@ public class PlaybackControl : MonoBehaviour
         }
     }
 
+    /* OnGUI
     void OnGUI()
     {
-        /*
         bool newPlaying = GUI.Toggle(new Rect(30, 25, 100, 30), playing, " PLAY");
         if (newPlaying != playing)
             playing = newPlaying;
@@ -140,10 +140,9 @@ public class PlaybackControl : MonoBehaviour
         //    threshold = GUI.HorizontalSlider(new Rect(730, 55, 120, 30), threshold, 0.0f, 6.0f);
         //    GUI.Label(new Rect(730, 70, 120, 30), "Threshold: " + System.Math.Round(threshold, 2) + "/m²");
         //}
+        
 
-    */
-
-    }
+    }*/
 
     public void lineDrawn()
     {

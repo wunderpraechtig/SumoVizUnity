@@ -117,9 +117,10 @@ public class MiniatureViewControl : MonoBehaviour
             }
             grabbingRightHand = false;
         }
+        HandleInputs();
     }
 
-    private void FixedUpdate()
+    private void HandleInputs()
     {
         // Case rotation or move
         if (grabbingLeftHand != grabbingRightHand) {

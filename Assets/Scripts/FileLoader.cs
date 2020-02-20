@@ -50,7 +50,6 @@ public class FileLoader : MonoBehaviour
         if (maxExtends < meshBounds.extents.z)
             maxExtends = meshBounds.extents.z;
         miniatureNormalizer.transform.localScale = new Vector3(0.5f / maxExtends, 0.5f / maxExtends, 0.5f / maxExtends);
-        Debug.Log("Calculated sim mesh transform");
     }
 
     void loadGeometryFile(string filename)
