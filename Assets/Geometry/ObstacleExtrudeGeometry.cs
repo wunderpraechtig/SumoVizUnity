@@ -20,7 +20,7 @@ public class ObstacleExtrudeGeometry : ExtrudeGeometry  {
 			sideMaterial.SetTextureScale("_MainTex",gl.theme.getTextureScaleForHeight((float)height));
 		}
 
-		ExtrudeGeometry.create (name, verticesList, height, zOffset, topMaterial, sideMaterial);
+		ExtrudeGeometry.create (name, verticesList, height, zOffset, topMaterial, sideMaterial, 13);
 	}
 }
 

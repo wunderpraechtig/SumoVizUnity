@@ -3,8 +3,12 @@ using UnityEngine;
 
 public class FloorExtrudeGeometry : Geometry
 {
+    private static GameObject geometryContainer = null;
+
     public static void create(string name, List<Vector2> verticesList, float zOffset)
     {
+        if (geometryContainer == null)
+            geometryContainer = GameObject.Find("SimulationObjects");
 
         Material sideMaterial;
 
@@ -13,6 +17,7 @@ public class FloorExtrudeGeometry : Geometry
         sideMaterial = gl.theme.getWallsMaterialST();
 
         GameObject floor = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
+        floor.transform.parent = geometryContainer.transform;
         MeshFilter mesh_filter = floor.GetComponent<MeshFilter>();
         Mesh mesh = mesh_filter.mesh;
         floor.GetComponent<Renderer>().material = sideMaterial;
@@ -30,7 +35,7 @@ public class FloorExtrudeGeometry : Geometry
             Vector3[] vertices = new Vector3[vertices2D.Length];
             for (int i = 0; i < vertices.Length; i++)
             {
-                vertices[i] = new Vector3(vertices2D[i].x, zOffset + 0.05f, vertices2D[i].y);
+                vertices[i] = new Vector3(vertices2D[i].x, zOffset -0.0001f, vertices2D[i].y);
             }  
 
         // Create the mesh
@@ -38,5 +43,9 @@ public class FloorExtrudeGeometry : Geometry
         mesh.vertices = vertices;
         mesh.triangles = indices;
         mesh.RecalculateBounds();
+
+        floor.AddComponent<BoxCollider>();
+        floor.layer = 11; // geometry floor
+        floor.transform.localPosition = new Vector3(0, 0, 0);
     }
 }

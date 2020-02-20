@@ -23,6 +23,7 @@ public class PedestrianLoader : MonoBehaviour {
 
 	public void createPedestrians() {
 		PlaybackControl pc = GameObject.Find ("PlaybackControl").GetComponent<PlaybackControl> ();
+        GameObject parent = GameObject.Find("SimulationObjects");
 		positions = positions.OrderBy(x => x.getID()).ThenBy(y => y.getTime()).ToList<PedestrianPosition>();
 		SortedList currentList = new SortedList ();
 		population = new int[(int)pc.total_time+1];
@@ -33,7 +34,7 @@ public class PedestrianLoader : MonoBehaviour {
 			if ((i == (positions.Count-1) || positions[i].getID()!=positions[i+1].getID()) && currentList.Count>0) {
 
 				GameObject p = (GameObject) Instantiate(Resources.Load("Pedestrian"));
-				p.transform.parent = null;
+				p.transform.parent = parent.transform;
 				p.GetComponent<Pedestrian>().setPositions(currentList);
 				p.GetComponent<Pedestrian>().setID(positions[i].getID());
 				pedestirans.Add(p);

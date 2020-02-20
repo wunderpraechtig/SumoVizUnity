@@ -2959,7 +2959,7 @@ GameObject:
   - component: {fileID: 400182}
   - component: {fileID: 11100000}
   - component: {fileID: 11400000}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Pedestrian
   m_TagString: Untagged
   m_Icon: {fileID: 0}

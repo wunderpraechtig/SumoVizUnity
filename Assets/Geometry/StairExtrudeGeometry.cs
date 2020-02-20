@@ -4,10 +4,12 @@ using System;
 
 public class StairExtrudeGeometry : Geometry
 {
+    private static GameObject geometryContainer = null;
 
     public static void create(string name, List<Vector2> coordFirst, List<Vector2> coordSecond, float A_x, float B_y, float C_z, float pxUp, float pyUp, float pxDown, float pyDown)
     {
-
+        if (geometryContainer == null)
+            geometryContainer = GameObject.Find("SimulationObjects");
         Material topMaterial;
 
         GeometryLoader gl = GameObject.Find("GeometryLoader").GetComponent<GeometryLoader>();
@@ -18,6 +20,7 @@ public class StairExtrudeGeometry : Geometry
         MeshFilter mesh_filter = stair.GetComponent<MeshFilter>();
         Mesh mesh = mesh_filter.mesh;
         mesh.Clear();
+        stair.transform.parent = geometryContainer.transform;
 
         stair.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
         stair.GetComponent<Renderer>().material = topMaterial;
@@ -162,6 +165,10 @@ public class StairExtrudeGeometry : Geometry
         mesh.uv = uvs;
         mesh.triangles = triangles;
         mesh.RecalculateBounds();
+        MeshCollider collider = stair.AddComponent<MeshCollider>();
+        collider.convex = true;
+        stair.layer = 11; // geometry floor
+        stair.transform.localPosition = new Vector3(0, 0, 0);
     }
 
     static List<float> angleToOrigin(Vector2[] pointsArray, Vector2 origin)

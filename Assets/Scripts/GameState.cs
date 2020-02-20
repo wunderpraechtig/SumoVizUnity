@@ -1,118 +1,105 @@
-﻿using System.Collections;
+﻿using CustomEvents;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class GameState : MonoBehaviour
 {
-    public enum GameStateEvent
+    [SerializeField] private bool                isPlaying = false;
+    [SerializeField] private decimal             currentTime;
+    [SerializeField] private decimal             totalTime;
+    [SerializeField] private TileColoringMode    pawnColoringMode = TileColoringMode.TileColoringNone;
+    [SerializeField] private bool                trajectoriesShown;
+    [SerializeField] private float               densityThreshold;
+
+    public event Action<bool>               isPlayingEvent;
+    public event Action<decimal>            currentTimeEvent;
+    public event Action<decimal>            totalTimeEvent;
+    public event Action<TileColoringMode>   coloringModeEvent;
+    public event Action<bool>               trajectoryModeEvent;
+    public event Action<float>              densityThresholdEvent;
+
+    
+
+    private void Start()
     {
-        CurrentTimeChanged      = 0x0001,
-        TotalTimeChanged        = 0x0002, 
-        PlayPause               = 0x0004,
-        HighlightSpeed          = 0x0008,
-        HighlightDensity        = 0x0010,
-        DensityChange           = 0x0020,
-        ShowTrajectories        = 0x0040,
-        FileLoaded              = 0x0080,
-        Any                     = 0xFFFF
+        isPlayingEvent.Invoke(isPlaying);
+        currentTimeEvent.Invoke(currentTime);
+        totalTimeEvent.Invoke(totalTime);
+        coloringModeEvent.Invoke(pawnColoringMode);
+        trajectoryModeEvent.Invoke(trajectoriesShown);
+        densityThresholdEvent.Invoke(densityThreshold);
+
+        Physics.IgnoreLayerCollision(10, 11);
+        Physics.IgnoreLayerCollision(10, 12);
+        Physics.IgnoreLayerCollision(10, 13);
     }
-    private Dictionary<GameStateObserver, GameStateEvent> observers = new Dictionary<GameStateObserver, GameStateEvent>();
-    public void Subscribe(GameStateObserver observer, GameStateEvent eventMask)
-    {
-        if (observers.ContainsKey(observer))
-        {
-            observers[observer] = eventMask;
-        }
-        else
-        {
-            observers.Add(observer, eventMask);
-        }
-    }
-    public void Unsubscribe(GameStateObserver observer)
-    {
-        if (observers.ContainsKey(observer))
-        {
-            observers.Remove(observer);
-        }
-    }
-    private void NotifyObservers(GameStateEvent eventMask, GameStateObserver excludedObserver)
-    {
-        foreach (var entry in observers)
-        {
-            if (entry.Key != excludedObserver && (entry.Value & eventMask) != 0)
+
+    public bool IsPlaying {
+        get { return isPlaying; }
+        set {
+            if (value != isPlaying)
             {
-                entry.Key.HandleEvent(eventMask);
+                isPlaying = value;
+                //isPlayingEvent.Invoke(value);
+                isPlayingEvent.Invoke(value);
             }
         }
     }
 
-    private PlaybackControl playbackControl;
-
-    private void Awake()
-    {
-        playbackControl = GameObject.Find("PlaybackControl").GetComponent<PlaybackControl>();
-    }
-
-    private void Start()
-    {
-        NotifyObservers(GameStateEvent.Any, null);
-    }
-
-    public bool GetIsPlaying() { return playbackControl.playing; }
-    public void SetPlaying(bool value, GameStateObserver observer) {
-        if (value != playbackControl.playing) {
-            playbackControl.playing = value;
-            NotifyObservers(GameStateEvent.PlayPause, observer);
+    public decimal CurrentTime {
+        get { return currentTime; }
+        set {
+            if (value != currentTime)
+            {
+                currentTime = value;
+                currentTimeEvent.Invoke(value);
+            }
         }
     }
 
-    public decimal GetCurrentTime() { return playbackControl.current_time; }
-    public void SetCurrentTime(decimal value, GameStateObserver observer)
-    {
-        if (value != playbackControl.current_time)
-        {
-            playbackControl.current_time = value;
-            NotifyObservers(GameStateEvent.CurrentTimeChanged, observer);
+    public decimal TotalTime {
+        get { return totalTime; }
+        set {
+            if (value != totalTime)
+            {
+                totalTime = value;
+                totalTimeEvent.Invoke(value);
+            }
         }
     }
 
-    public decimal GetTotalTime() { return playbackControl.current_time; }
-    public void SetTotalTime(decimal value, GameStateObserver observer)
-    {
-        if (value != playbackControl.total_time)
-        {
-            playbackControl.total_time = value;
-            NotifyObservers(GameStateEvent.TotalTimeChanged, observer);
+    public TileColoringMode PawnColoringMode {
+        get { return pawnColoringMode; }
+        set {
+            if (value != pawnColoringMode)
+            {
+                pawnColoringMode = value;
+                coloringModeEvent.Invoke(value);
+            }
         }
     }
 
-    public TileColoringMode GetPawnColoringMode() { return playbackControl.tileColoringMode; }
-    public void SetPawnColoringMode(TileColoringMode value, GameStateObserver observer)
-    {
-        if (value != playbackControl.tileColoringMode)
-        {
-            playbackControl.tileColoringMode = value;
-            NotifyObservers(GameStateEvent.HighlightDensity | GameStateEvent.HighlightSpeed, observer);
+    public bool IsShowingTrajectories {
+        get { return trajectoriesShown; }
+        set {
+            if (value != trajectoriesShown)
+            {
+                trajectoriesShown = value;
+                trajectoryModeEvent.Invoke(value);
+            }
         }
     }
 
-    public bool GetShowTrajectories() { return playbackControl.trajectoriesShown; }
-    public void SetShowTrajectories(bool value, GameStateObserver observer)
-    {
-        if (value != playbackControl.trajectoriesShown)
-        {
-            playbackControl.trajectoriesShown = value;
-            NotifyObservers(GameStateEvent.ShowTrajectories, observer);
-        }
-    }
-
-    public float DensityThreshold() { return playbackControl.threshold; }
-    public void SetDensityThreshold(float value, GameStateObserver observer)
-    {
-        if (value != playbackControl.threshold)
-        {
-            playbackControl.threshold = value;
-            NotifyObservers(GameStateEvent.DensityChange, observer);
+    public float DensityThreshold {
+        get { return densityThreshold; }
+        set {
+            if (value != densityThreshold)
+            {
+                densityThreshold = value;
+                densityThresholdEvent.Invoke(value);
+            }
         }
     }
 }

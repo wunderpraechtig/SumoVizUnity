@@ -51,7 +51,7 @@ public class WallExtrudeGeometry : ExtrudeGeometry  {
 		}
 
 		GeometryLoader gl = GameObject.Find ("GeometryLoader").GetComponent<GeometryLoader> ();
-		ExtrudeGeometry.create (name, verticesList, height, zOffset, gl.theme.getWallsMaterial(), gl.theme.getWallsMaterialST());
+		ExtrudeGeometry.create (name, verticesList, height, zOffset, gl.theme.getWallsMaterial(), gl.theme.getWallsMaterialST(), 12);
 		
 	}
 }

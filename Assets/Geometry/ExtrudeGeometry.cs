@@ -4,11 +4,18 @@ using System.Collections.Generic;
 
 public class ExtrudeGeometry : Geometry  {
 
-	public static void create (string name, List<Vector2> verticesList, float height, float zOffset, Material topMaterial, Material sideMaterial) {
+    private static GameObject geometryContainer = null;
 
-		GameObject obstacle = new GameObject (name, typeof(MeshFilter), typeof(MeshRenderer));
+    public static void create (string name, List<Vector2> verticesList, float height, float zOffset, Material topMaterial, Material sideMaterial, int layer) {
+
+        if (geometryContainer == null)
+            geometryContainer = GameObject.Find("SimulationObjects");
+
+        GameObject container = new GameObject(name);
+        container.transform.parent = geometryContainer.transform;
+        GameObject obstacle = new GameObject (name + "_top", typeof(MeshFilter), typeof(MeshRenderer));
 		MeshFilter mesh_filter = obstacle.GetComponent<MeshFilter> ();
-
+        obstacle.transform.parent = container.transform;
         //Shadows currently disabled for TopMaterial   -> switch on by    ShadowCastingMode.On
         obstacle.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         obstacle.GetComponent<Renderer>().material = topMaterial;
@@ -35,8 +42,8 @@ public class ExtrudeGeometry : Geometry  {
         GameObject walls = new GameObject (name + "_side", typeof(MeshFilter), typeof(MeshRenderer));
 		MeshFilter mesh_filter_walls = walls.GetComponent<MeshFilter> ();
 		walls.GetComponent<Renderer>().material = sideMaterial;
-
-		List<Vector2> uvs_walls = new List<Vector2>();
+        walls.transform.parent = container.transform;
+        List<Vector2> uvs_walls = new List<Vector2>();
 		List<Vector3> vertices_walls = new List<Vector3>();
 		List<int> indices_walls = new List<int>();
 
@@ -99,6 +106,10 @@ public class ExtrudeGeometry : Geometry  {
 		mesh = TangentHelper.TangentSolver (mesh);
 
 		mesh_filter.mesh = mesh;
-	}
+
+        MeshCollider collider = walls.AddComponent<MeshCollider>();
+        walls.layer = layer;
+        container.transform.localPosition = new Vector3(0, 0, 0);
+    }
 }
 

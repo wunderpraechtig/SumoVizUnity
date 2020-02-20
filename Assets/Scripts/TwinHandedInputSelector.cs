@@ -5,18 +5,27 @@ using UnityEngine.EventSystems;
 
 public class TwinHandedInputSelector : MonoBehaviour
 {
-    private OVRCameraRig cameraRig;
     private OVRInputModule inputModule;
+
+    [SerializeField]
+    private Transform laserAnchorL = null;
+    [SerializeField]
+    private Transform laserAnchorR = null;
+    [SerializeField]
     private bool lockedController = false;
+    [SerializeField]
+    private GameObject lockingObject = null;
 
     public OVRInput.Button controllerUiButtonsL = OVRInput.Button.Three;
     public OVRInput.Button controllerUiButtonsR = OVRInput.Button.One;
 
-    void Start()
+    void Awake()
     {
-        cameraRig = FindObjectOfType<OVRCameraRig>();
         inputModule = FindObjectOfType<OVRInputModule>();
+    }
 
+    private void Start()
+    {
         if (OVRInput.GetActiveController() == OVRInput.Controller.LTouch)
         {
             SetActiveController(OVRInput.Controller.LTouch);
@@ -43,12 +52,12 @@ public class TwinHandedInputSelector : MonoBehaviour
     {
         if (c == OVRInput.Controller.LTouch)
         {
-            inputModule.rayTransform = cameraRig.leftHandAnchor;
+            inputModule.rayTransform = laserAnchorL;
             inputModule.joyPadClickButton = controllerUiButtonsL;
         }
         else
         {
-            inputModule.rayTransform = cameraRig.rightHandAnchor;
+            inputModule.rayTransform = laserAnchorR;
             inputModule.joyPadClickButton = controllerUiButtonsR;
         }
     }
@@ -63,19 +72,21 @@ public class TwinHandedInputSelector : MonoBehaviour
         return false;
     }
 
-    public bool SetAndLockActiveController(OVRInput.Controller c)
+    public bool SetAndLockActiveController(OVRInput.Controller c, GameObject obj)
     {
         if (!lockedController)
         {
             lockedController = true;
+            lockingObject = obj;
             SetActiveController(c);
             return true;
         }
         return false;
     }
 
-    public void UnlockActiveController()
+    public void UnlockActiveController(GameObject obj)
     {
-        lockedController = false;
+        if(obj = lockingObject)
+            lockedController = false;
     }
 }

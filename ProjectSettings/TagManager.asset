@@ -15,11 +15,11 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Player
+  - Pedestrian
+  - GeometryFloor
+  - GeometryWalls
+  - GeometryObstacles
   - 
   - 
   - 

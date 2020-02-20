@@ -6,27 +6,52 @@ using UnityEditor;
 
 public class FileLoader : MonoBehaviour
 {
-    // Use this for initialization
+    [SerializeField] private GameObject miniatureNormalizer = null;
+    [SerializeField] private GameObject simulationObjects = null;
+    
     void Start()
     {
 
         GeometryLoader gl = GameObject.Find("GeometryLoader").GetComponent<GeometryLoader>();
         gl.setTheme(new LabThemingMode());
 
-        //var GeometryXML = EditorUtility.OpenFilePanel(
-        //    "Load Geometry", "", "xml");
+        var GeometryXML = EditorUtility.OpenFilePanel(
+            "Load Geometry", "", "xml");
 
-        //var TrajectoryXML = EditorUtility.OpenFilePanel(
-        //    "Load Trajectory", "", "xml");
+        var TrajectoryXML = EditorUtility.OpenFilePanel(
+            "Load Trajectory", "", "xml");
 
-        //loadPedestrianFile(TrajectoryXML);
-        //loadGeometryFile(GeometryXML);
+        loadPedestrianFile(TrajectoryXML);
+        loadGeometryFile(GeometryXML);
+
+        RecalculateSimulationTransform();
+
     }
 
-    // Update is called once per frame
-    void Update() { }
+    public void RecalculateSimulationTransform()
+    {
+        MeshFilter[] meshFilters = simulationObjects.GetComponentsInChildren<MeshFilter>();
+        Bounds meshBounds = new Bounds();
+        foreach (MeshFilter filter in meshFilters)
+        {
+            if (filter.mesh != null)
+            {
+                meshBounds.Encapsulate(filter.mesh.bounds);
+            }
+        }
 
+        Vector3 centeredPos = -meshBounds.center;
+        centeredPos.y = 0;
+        simulationObjects.transform.localPosition = centeredPos;
 
+        float maxExtends = meshBounds.extents.x;
+        if (maxExtends < meshBounds.extents.y)
+            maxExtends = meshBounds.extents.y;
+        if (maxExtends < meshBounds.extents.z)
+            maxExtends = meshBounds.extents.z;
+        miniatureNormalizer.transform.localScale = new Vector3(0.5f / maxExtends, 0.5f / maxExtends, 0.5f / maxExtends);
+        Debug.Log("Calculated sim mesh transform");
+    }
 
     void loadGeometryFile(string filename)
     {

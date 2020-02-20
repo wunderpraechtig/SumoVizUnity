@@ -176,7 +176,7 @@ public class Pedestrian : MonoBehaviour {
 				tile.GetComponent<Renderer>().enabled = false;
 			}
 
-			transform.position = newPosition;
+			transform.localPosition = newPosition;
 			gameObject.hideFlags = HideFlags.None;
 
 		} else {
@@ -318,6 +318,6 @@ public class Pedestrian : MonoBehaviour {
 			positions.Add(ped.getTime(),ped);
 		}
 		PedestrianPosition pos = (PedestrianPosition)p.GetByIndex (0);
-		transform.position = new Vector3 (pos.getX(),pos.getZ(),pos.getY());
+		transform.localPosition = new Vector3 (pos.getX(),pos.getZ(),pos.getY());
 	}
 }
