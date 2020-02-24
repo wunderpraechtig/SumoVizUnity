@@ -20,11 +20,11 @@ public class PlaybackControl : MonoBehaviour
         get { return gameState.IsPlaying; }
         set { gameState.IsPlaying = value; }
     }
-    public decimal current_time {
+    public float current_time {
         get { return gameState.CurrentTime; }
         set { gameState.CurrentTime = value; }
     }
-    public decimal total_time {
+    public float total_time {
         get { return gameState.TotalTime; }
         set { gameState.TotalTime = value; }
     }
@@ -65,16 +65,16 @@ public class PlaybackControl : MonoBehaviour
     {
         if (isShowingTrajectories)
         {
-            foreach (GameObject p in pl.pedestirans)
+            foreach (Pedestrian p in pl.pedestrians)
             {
-                p.GetComponent<Pedestrian>().showTrajectory();
+                p.showTrajectory();
             }
         }
         else
         {
-            foreach (GameObject p in pl.pedestirans)
+            foreach (Pedestrian p in pl.pedestrians)
             {
-                p.GetComponent<Pedestrian>().hideTrajectory();
+                p.hideTrajectory();
             }
         }
     }
@@ -86,7 +86,7 @@ public class PlaybackControl : MonoBehaviour
         if (newPlaying != playing)
             playing = newPlaying;
 
-        decimal new_current_time = (decimal)GUI.HorizontalSlider(new Rect(100, 30, 400, 30), (float)current_time, 0.0f, (float)total_time);
+        float new_current_time = (float)GUI.HorizontalSlider(new Rect(100, 30, 400, 30), (float)current_time, 0.0f, (float)total_time);
         if (new_current_time != current_time)
             current_time = new_current_time;
 
@@ -157,7 +157,7 @@ public class PlaybackControl : MonoBehaviour
         {
             try
             {
-                current_time = (current_time + (decimal)Time.deltaTime) % total_time;
+                current_time = (current_time + (float)Time.deltaTime) % total_time;
             }
             catch (DivideByZeroException)
             {

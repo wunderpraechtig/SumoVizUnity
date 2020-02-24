@@ -6,15 +6,15 @@ using UnityEngine.Events;
 public class GameState : MonoBehaviour
 {
     [SerializeField] private bool                isPlaying = false;
-    [SerializeField] private decimal             currentTime;
-    [SerializeField] private decimal             totalTime;
+    [SerializeField] private float             currentTime;
+    [SerializeField] private float             totalTime;
     [SerializeField] private TileColoringMode    pawnColoringMode = TileColoringMode.TileColoringNone;
     [SerializeField] private bool                trajectoriesShown;
     [SerializeField] private float               densityThreshold;
 
     public event Action<bool>               isPlayingEvent;
-    public event Action<decimal>            currentTimeEvent;
-    public event Action<decimal>            totalTimeEvent;
+    public event Action<float>            currentTimeEvent;
+    public event Action<float>            totalTimeEvent;
     public event Action<TileColoringMode>   coloringModeEvent;
     public event Action<bool>               trajectoryModeEvent;
     public event Action<float>              densityThresholdEvent;
@@ -47,7 +47,7 @@ public class GameState : MonoBehaviour
         }
     }
 
-    public decimal CurrentTime {
+    public float CurrentTime {
         get { return currentTime; }
         set {
             if (value != currentTime)
@@ -58,7 +58,7 @@ public class GameState : MonoBehaviour
         }
     }
 
-    public decimal TotalTime {
+    public float TotalTime {
         get { return totalTime; }
         set {
             if (value != totalTime)

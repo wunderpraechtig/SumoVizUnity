@@ -8,7 +8,7 @@ public struct Entry
 {
 	public string name;
 	public string unit;
-	public int decimals;
+	public int floats;
 	public float value;
 	public bool graphable;
 	public float maxValue;
@@ -17,7 +17,7 @@ public struct Entry
 	{
 		name = n;
 		unit = u;
-		decimals = d;
+		floats = d;
 		value = val;
 		graphable = g;
 		maxValue = m;
@@ -25,9 +25,9 @@ public struct Entry
 }
 
 public struct CurrentValue {
-	public decimal time;
+	public float time;
 	public float value;
-	public CurrentValue(decimal t, float v) {
+	public CurrentValue(float t, float v) {
 		time = t;
 		value = v;
 	}
@@ -123,14 +123,15 @@ public class InfoText : MonoBehaviour {
 		string seconds = ((float)pc.current_time%60).ToString("00");;
 		text += "current time: "+minutes+":"+seconds+"\n";
 
+        /*
 		if (pl.population != null) {
 
-			infos.Add( new Entry("population","",pl.population[(int) pc.current_time],0,true,pl.pedestirans.Count));
+			infos.Add( new Entry("population","",pl.population[(int) pc.current_time],0,true,pl.pedestrians.Count));
 		}
-
+        */
 		if (gp.point1active && gp.point2active) {
 			infos.Add( new Entry("line length","m",Vector3.Distance(gp.point1, gp.point2),2,false,0));
-			infos.Add( new Entry("line crossings","",gp.lineCrossed,0,true,pl.pedestirans.Count));
+			infos.Add( new Entry("line crossings","",gp.lineCrossed,0,true,pl.pedestrians.Count));
 			infos.Add( new Entry("line flow","/s",gp.crossings.Count,0,true,10.0f));
 			infos.Add( new Entry("avg. crossing speed","m/s",gp.crossingSpeed,2,true,3.0f));
 			infos.Add( new Entry("current flow","/ms",gp.crossings.Count/Vector3.Distance(gp.point1, gp.point2),2,true,3.0f));
@@ -157,7 +158,7 @@ public class InfoText : MonoBehaviour {
 
 		for (int i =0;i<infos.Count;i++) {
 			Entry e = infos[i];
-			text += infos[i].name+": "+System.Math.Round(e.value,e.decimals)+e.unit+"\n";
+			text += infos[i].name+": "+System.Math.Round(e.value,e.floats)+e.unit+"\n";
 			if (e.graphable) {
 				if (GUI.Toggle(new Rect(Screen.width*(transform.position.x)-20, Screen.height*(1-transform.position.y)-(15*(infos.Count-i)+17), 100, 15), i==activeEntry, "") && i != activeEntry) {
 					removeDiagram ();
@@ -174,7 +175,7 @@ public class InfoText : MonoBehaviour {
 
 			GUI.Label(new Rect(diagramPosition.x, Screen.height-diagramPosition.y-diagramPosition.height-30, diagramPosition.width, 30), infos[activeEntry].name);
 			GUI.Label(new Rect(diagramPosition.x-15, Screen.height-diagramPosition.y, 30, 30), "[s]");
-			GUI.Label(new Rect(diagramPosition.x-35, Screen.height-diagramPosition.y-diagramPosition.height-10, 30, 30), System.Math.Round(infos[activeEntry].maxValue,infos[activeEntry].decimals)+"");
+			GUI.Label(new Rect(diagramPosition.x-35, Screen.height-diagramPosition.y-diagramPosition.height-10, 30, 30), System.Math.Round(infos[activeEntry].maxValue,infos[activeEntry].floats)+"");
 			if (infos[activeEntry].unit!="") {
 				GUI.Label(new Rect(diagramPosition.x-35, Screen.height-diagramPosition.y-diagramPosition.height-30, 30, 30), "["+infos[activeEntry].unit+"]");
 			}
@@ -195,8 +196,7 @@ public class InfoText : MonoBehaviour {
 		float maxSpeed = float.MinValue;
 		float maxDensity = float.MinValue;
 		List<Vector2> points = new List<Vector2> ();
-		foreach (GameObject p in pl.pedestirans) {
-			Pedestrian ped = p.GetComponent<Pedestrian>();
+		foreach (Pedestrian ped in pl.pedestrians) {
 			Renderer r = ped.GetComponentInChildren<Renderer>() as Renderer;
 			if (r.enabled) {
 				float speed = ped.getSpeed();

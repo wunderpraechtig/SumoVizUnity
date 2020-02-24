@@ -12,7 +12,7 @@ public class Groundplane : MonoBehaviour {
 	VectorLine myLine;
 	public int lineCrossed;
 
-	public List<decimal> crossings = new List<decimal>();
+	public List<float> crossings = new List<float>();
 
 	VectorLine myLine_tmp;
 	public float crossingSpeed = 0.0f;
@@ -70,7 +70,7 @@ public class Groundplane : MonoBehaviour {
 		lineCrossed = 0;
 		crossingSpeed = 0.0f;
 
-		crossings = new List<decimal> ();
+		crossings = new List<float> ();
 
 		InfoText it = GameObject.Find ("InfoText").GetComponent<InfoText> ();
 		if (it.diagram) it.removeDiagram();

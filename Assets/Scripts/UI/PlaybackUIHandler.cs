@@ -18,6 +18,8 @@ public class PlaybackUIHandler : MonoBehaviour
     [SerializeField] private Toggle toggleHighlightSpeed = null;
     [SerializeField] private Toggle toggleHighlightDensity = null;
     [SerializeField] private Toggle toggleShowTrajectories = null;
+    private System.TimeSpan timeSpan;
+    const string format = @"mm\:ss\.ff";
 
     private GameState gameState;
 
@@ -35,17 +37,17 @@ public class PlaybackUIHandler : MonoBehaviour
 
     private void UpdateTimeSlider()
     {
-        sliderTime.maxValue = (float)gameState.TotalTime;
-        sliderTime.SetValueWithoutNotify((float)gameState.CurrentTime);
-        textTime.text = TimeStringFromSeconds((decimal)gameState.CurrentTime);
+        sliderTime.maxValue = gameState.TotalTime;
+        sliderTime.SetValueWithoutNotify(gameState.CurrentTime);
+        textTime.text = TimeStringFromSeconds(gameState.CurrentTime);
     }
 
-    private void OnTotalTimeChanged(decimal value)
+    private void OnTotalTimeChanged(float value)
     {
         UpdateTimeSlider();
     }
 
-    private void OnCurrentTimeChanged(decimal value)
+    private void OnCurrentTimeChanged(float value)
     {
         UpdateTimeSlider();
     }
@@ -96,8 +98,8 @@ public class PlaybackUIHandler : MonoBehaviour
 
     public void HandleSliderTime()
     {
-        gameState.CurrentTime = (decimal)sliderTime.value;
-        textTime.text = TimeStringFromSeconds((decimal)sliderTime.value);
+        gameState.CurrentTime = (float)sliderTime.value;
+        textTime.text = TimeStringFromSeconds((float)sliderTime.value);
     }
 
     public void HandleButtonSkipToStart()
@@ -146,9 +148,10 @@ public class PlaybackUIHandler : MonoBehaviour
         gameState.DensityThreshold = sliderDensityThreshold.value;
     }
 
-    private string TimeStringFromSeconds(decimal time)
+    private string TimeStringFromSeconds(float time)
     {
-        System.TimeSpan span = System.TimeSpan.FromSeconds((double)time);
-        return span.ToString(@"mm\:ss\.ff");
+        
+        timeSpan = System.TimeSpan.FromSeconds(time);
+        return timeSpan.ToString(format);
     }
 }

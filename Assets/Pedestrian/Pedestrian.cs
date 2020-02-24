@@ -11,36 +11,56 @@ public class Pedestrian : MonoBehaviour {
 	private float speed;
 	int densityReload;
 	int densityReloadInterval = 10;
+    bool playingAnimation = false;
 
 	int id;
-	SortedList positions = new SortedList ();
+    List<PedestrianPosition> positions = new List<PedestrianPosition>();
+    int lastTimeIndex = 0;
+    float timeEarliest = 0;
+    float timeLatest = 0;
 	Color myColor;
 	bool trajectoryVisible;
+
+    Animation componentAnimation = null;
+    AnimationState animationWalking = null;
+    Renderer tileRenderer;
     
 
-    private InfoText it;
+    //private InfoText it;
 	private PedestrianLoader pl;
 	private PlaybackControl pc;
-	private Renderer r;
+	private Renderer pedRenderer;
 	private GeometryLoader gl;
 	private Groundplane gp;
 
 	GameObject tile;
 
-	// Use this for initialization
-	void Start () {
-		gameObject.AddComponent<BoxCollider>();
-		transform.Rotate (0,90,0);
-		myColor = new Color (Random.value, Random.value, Random.value);
-		GetComponentInChildren<Renderer>().materials[1].color = myColor;
-		addTile ();
+    private void Awake()
+    {
+        pl = GameObject.Find("PedestrianLoader").GetComponent<PedestrianLoader>();
+        pc = GameObject.Find("PlaybackControl").GetComponent<PlaybackControl>();
+        gl = GameObject.Find("GeometryLoader").GetComponent<GeometryLoader>();
+        gp = gl.groundplane;
+        pedRenderer = GetComponentInChildren<Renderer>();
+        componentAnimation = GetComponent<Animation>();
+        addTile();
+    }
 
-		it = GameObject.Find ("InfoText").GetComponent<InfoText> ();
-		pl = GameObject.Find ("PedestrianLoader").GetComponent<PedestrianLoader> ();
-		pc = GameObject.Find ("PlaybackControl").GetComponent<PlaybackControl> ();
-		r = GetComponentInChildren<Renderer>() as Renderer;
-		gl = GameObject.Find ("GeometryLoader").GetComponent<GeometryLoader> ();
-		gp = gl.groundplane;
+    // Use this for initialization
+    void Start () {
+        gameObject.AddComponent<BoxCollider>();
+        transform.Rotate(0, 90, 0);
+        
+
+
+        //it = GameObject.Find ("InfoText").GetComponent<InfoText> ();
+        if (componentAnimation != null)
+        {
+            myColor = new Color(Random.value, Random.value, Random.value);
+            pedRenderer.materials[1].color = myColor;
+            animationWalking = componentAnimation["walking"];
+            componentAnimation.Stop();
+        }
     }
 
 	void OnMouseDown(){
@@ -60,6 +80,8 @@ public class Pedestrian : MonoBehaviour {
     
     public void showTrajectory()
     {
+        throw new System.NotImplementedException();
+        /*
         List<Vector3> points = new List<Vector3>();
         for (int i = 0; i < positions.Count - 1; i++)
         {
@@ -84,6 +106,7 @@ public class Pedestrian : MonoBehaviour {
 
         pc.trajectoriesShown = true;
         trajectoryVisible = true;
+        */
     }
 
 
@@ -92,8 +115,9 @@ public class Pedestrian : MonoBehaviour {
 		float side = 1.0f;
 		tile = new GameObject ("tile"+id, typeof(MeshFilter), typeof(MeshRenderer));
 		MeshFilter mesh_filter = tile.GetComponent<MeshFilter> ();
-		tile.GetComponent<Renderer>().material = (Material) Resources.Load("Tilematerial", typeof(Material));
-		tile.GetComponent<Renderer>().material.color = Color.red;
+        tileRenderer = tile.GetComponent<Renderer>();
+        tileRenderer.material = (Material) Resources.Load("Tilematerial", typeof(Material));
+        tileRenderer.material.color = Color.red;
 		Mesh mesh = new Mesh();
 		mesh.vertices = new Vector3[] {new Vector3 (-side/2, 0.01f, -side/2),new Vector3 (side/2, 0.01f, -side/2),new Vector3 (-side/2, 0.01f, side/2),new Vector3 (side/2, 0.01f, side/2)};
 		mesh.triangles = new int[] {2,1,0,1,2,3};
@@ -113,36 +137,50 @@ public class Pedestrian : MonoBehaviour {
 
 		tile.transform.position = gameObject.transform.position;
 		tile.transform.parent = gameObject.transform;
+        tile.transform.localScale = Vector3.one;
 
-	}
 
-	// Update is called once per frame
+    }
+    
 	void Update () {
 
 		if (pc.playing) {
-			GetComponent<Animation>().Play ();
+            if (!playingAnimation)
+            {
+                if (componentAnimation != null)
+                    componentAnimation.Play();
+                playingAnimation = true;
+            }
 		} else {
-			GetComponent<Animation>().Stop ();
+            if (playingAnimation)
+            {
+                if (componentAnimation != null)
+                    componentAnimation.Stop();
+                playingAnimation = false;
+            }
 		}
 
-		int index = _getTrait(positions, pc.current_time);
+		int index = getIndexOfNewTime(pc.current_time);
 		
 		if (index<positions.Count-1 && index>-1){
-			r.enabled = true;
-			PedestrianPosition pos = (PedestrianPosition)positions.GetByIndex (index);
-			PedestrianPosition pos2 = (PedestrianPosition)positions.GetByIndex (index+1);
+			pedRenderer.enabled = true;
+			PedestrianPosition pos = positions[index];
+			PedestrianPosition pos2 = positions[index+1];
 			start = new Vector3 (pos.getX(), pos.getZ(), pos.getY());
 			target = new Vector3 (pos2.getX(), pos2.getZ(), pos2.getY());
-			float time = (float) pc.current_time;
-			float movement_percentage = (float) time-(float)pos.getTime();
+
+			float movement_percentage = pc.current_time - pos.getTime();
 			Vector3 newPosition = Vector3.Lerp(start,target,movement_percentage);
 
             // to keep pedestrians upright change in the Z Axis is excluded from rotation calculation
             Vector3 relativePos = new Vector3(pos2.getX(), 0, pos2.getY()) - new Vector3(pos.getX(), 0, pos.getY());
             speed = relativePos.magnitude;
 
-			GetComponent<Animation>()["walking"].speed = getSpeed ();
-			if (start!=target) transform.rotation = Quaternion.LookRotation(relativePos);
+            if (componentAnimation != null)
+                animationWalking.speed = getSpeed ();
+            
+
+            if (start!=target) transform.localRotation = Quaternion.LookRotation(relativePos);
 
 			//check if line is crossed
 
@@ -155,11 +193,11 @@ public class Pedestrian : MonoBehaviour {
 			//Tile coloring
 			if (pc.tileColoringMode != TileColoringMode.TileColoringNone) {
 
-				tile.GetComponent<Renderer>().enabled = true;
+                tileRenderer.enabled = true;
 
 				if (pc.tileColoringMode == TileColoringMode.TileColoringSpeed) {
-					tile.GetComponent<Renderer>().material.color = ColorHelper.ColorForSpeed(getSpeed(), 1.5f);  //1.5 as average maximum walking speed when not hindered
-					it.updateSpeed(speed);
+                    tileRenderer.material.color = ColorHelper.ColorForSpeed(getSpeed(), 1.5f);  //1.5 as average maximum walking speed when not hindered
+					//it.updateSpeed(speed);
 				} else if (pc.tileColoringMode == TileColoringMode.TileColoringDensity) {
 					densityReload = (densityReload+1)%densityReloadInterval;
 					if (densityReload==0) {
@@ -167,21 +205,21 @@ public class Pedestrian : MonoBehaviour {
 					}
 					float density = getDensity();
 					if (density>=pc.threshold) {
-						tile.GetComponent<Renderer>().material.color = ColorHelper.ColorForDensity(density);
+                        tileRenderer.material.color = ColorHelper.ColorForDensity(density);
 					} else {
-						tile.GetComponent<Renderer>().enabled = false;
+                        tileRenderer.enabled = false;
 					}
 				}
 			} else {
-				tile.GetComponent<Renderer>().enabled = false;
+                tileRenderer.enabled = false;
 			}
 
 			transform.localPosition = newPosition;
 			gameObject.hideFlags = HideFlags.None;
 
 		} else {
-			r.enabled = false;
-			tile.GetComponent<Renderer>().enabled = false;
+			pedRenderer.enabled = false;
+            tileRenderer.enabled = false;
 			gameObject.hideFlags = HideFlags.HideInHierarchy;
 		}
 	}
@@ -192,13 +230,13 @@ public class Pedestrian : MonoBehaviour {
 		if (hideFlags==HideFlags.HideInHierarchy) return -1;
 		int nearbys = 0;
 		float radius = 2.0f;
-		foreach (GameObject p in pl.pedestirans) {
-			if (p!=this && Vector3.Distance(transform.position,p.transform.position)<radius && p.hideFlags!=HideFlags.HideInHierarchy) {
+		foreach (Pedestrian p in pl.pedestrians) {
+			if (p!=this && Vector3.Distance(transform.localPosition,p.transform.localPosition) <radius && p.hideFlags!=HideFlags.HideInHierarchy) {
 				nearbys++;
 			}
 		}
 		float density = nearbys/(radius*radius*Mathf.PI);
-		it.updateDensity(density);
+		//it.updateDensity(density);
 		return density;
 	}
 
@@ -206,7 +244,7 @@ public class Pedestrian : MonoBehaviour {
 
 		if (hideFlags==HideFlags.HideInHierarchy) return -1;
 		List<float> nearbys = new List<float>();
-		foreach (GameObject p in pl.pedestirans) {
+		foreach (Pedestrian p in pl.pedestrians) {
 			if (p!=this && p.hideFlags!=HideFlags.HideInHierarchy) {
 				float distance = Vector3.Distance(transform.position,p.transform.position);
 				if (nearbys.Count == 0) nearbys.Add(distance);
@@ -215,7 +253,7 @@ public class Pedestrian : MonoBehaviour {
 			}
 		}
 		float density = 8/(nearbys[7]*nearbys[7]*Mathf.PI);
-		it.updateDensity(density);
+		//it.updateDensity(density);
 
 		return density;
 	}
@@ -264,12 +302,33 @@ public class Pedestrian : MonoBehaviour {
 		return doIntersect;
 	}
 
-	private int _getTrait(SortedList thisList, decimal thisValue) {
-
-		for (int i = 0; i < thisList.Count; i++) {
-			if ((decimal)thisList.GetKey(i)>thisValue) return i-1;
-		}
-		return -1;
+	private int getIndexOfNewTime(float time) {
+        if (positions.Count < 1) return -1;
+        float lastTime = positions[lastTimeIndex].getTime();
+        if (time < timeEarliest) return -1;
+        if (time > timeLatest) return -1;
+        if (lastTime < time)
+        {
+            for (int i = lastTimeIndex; i < positions.Count; ++i)
+            {
+                if (positions[i].getTime() > time) {
+                    lastTimeIndex = i - 1;
+                    return i - 1;
+                }
+            }
+        }
+        else
+        {
+            for (int i = lastTimeIndex; i >= 0; --i)
+            {
+                if (positions[i].getTime() <= time) {
+                    lastTimeIndex = i;
+                    return i;
+                }
+            }
+        }
+        return -1;
+		
 		/*
 		// Check to see if we need to search the list.
 		if (thisList == null || thisList.Count <= 0) { return -1; }
@@ -284,11 +343,11 @@ public class Pedestrian : MonoBehaviour {
 		bool searching = true;
 		while (searching)
 		{
-			int comparisonResult = decimal.Compare(thisValue, (decimal) thisList.GetKey(index));
+			int comparisonResult = float.Compare(thisValue, (float) thisList.GetKey(index));
 			if (comparisonResult == 0) { return index; }
 			else if (comparisonResult < 0) { upper = index - 1; }
 			else { lower = index + 1; }
-			Debug.Log (thisValue + " : " + (decimal) thisList.GetKey(index));
+			Debug.Log (thisValue + " : " + (float) thisList.GetKey(index));
 			index = (lower + upper) / 2;
 			if (lower > upper) { searching = false; }
 		}
@@ -312,12 +371,11 @@ public class Pedestrian : MonoBehaviour {
         
     }
 
-	public void setPositions(SortedList p) {
-		positions.Clear();
-		foreach (PedestrianPosition ped in p.Values) {
-			positions.Add(ped.getTime(),ped);
-		}
-		PedestrianPosition pos = (PedestrianPosition)p.GetByIndex (0);
+	public void setPositions(List<PedestrianPosition> p) {
+        positions = p;
+		PedestrianPosition pos = positions[0];
 		transform.localPosition = new Vector3 (pos.getX(),pos.getZ(),pos.getY());
+        timeEarliest = positions[0].getTime();
+        timeLatest = positions[positions.Count - 1].getTime();
 	}
 }

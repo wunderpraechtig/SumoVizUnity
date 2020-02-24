@@ -260,17 +260,17 @@ public class FileLoader : MonoBehaviour
             {
                 foreach (XmlElement agent in frame)
                 {
-                    decimal time;
+                    float time;
                     int id;
                     float x;
                     float y;
                     float z;     
-                    decimal.TryParse(frame.GetAttribute("ID"), out time);
+                    float.TryParse(frame.GetAttribute("ID"), out time);
                     int.TryParse(agent.GetAttribute("ID"), out id);
                     float.TryParse(agent.GetAttribute("x"), out x);
                     float.TryParse(agent.GetAttribute("y"), out y);
                     float.TryParse(agent.GetAttribute("z"), out z);
-                    pl.addPedestrianPosition(new PedestrianPosition(id, time / fps, x, y, z));
+                    pl.addPedestrianPosition(new PedestrianPosition(id, time /fps, x, y, z));
                 }
             }
         }

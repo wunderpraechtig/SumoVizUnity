@@ -76,9 +76,8 @@ public class FundamentalDiagram : MonoBehaviour {
 		float maxSpeed = float.MinValue;
 		float maxDensity = float.MinValue;
 		List<Vector2> points = new List<Vector2> ();
-		foreach (GameObject p in pl.pedestirans) {
-			Pedestrian ped = p.GetComponent<Pedestrian>();
-			if (p.hideFlags != HideFlags.HideInHierarchy) {
+		foreach (Pedestrian ped in pl.pedestrians) {
+			if (ped.hideFlags != HideFlags.HideInHierarchy) {
 				float speed = ped.getSpeed();
 				float density = ped.getDensity();
 				maxSpeed = Mathf.Max(speed,maxSpeed);

@@ -6,46 +6,46 @@ using System.Linq;
 
 public class PedestrianLoader : MonoBehaviour {
 
-	private List<PedestrianPosition> positions = new List<PedestrianPosition>();
-	public List<GameObject> pedestirans = new List<GameObject>();
-	public int[] population;
+    Dictionary<int, List<PedestrianPosition>> pedestrianPositions = new Dictionary<int, List<PedestrianPosition>>();
+    PlaybackControl pc;
+    GameObject parent;
 
-	// Use this for initialization
-	void Start () {
+    public List<Pedestrian> pedestrians = new List<Pedestrian>();
+    public int[] population;
 
-	}
+    private void Awake()
+    {
+        pc = GameObject.Find("PlaybackControl").GetComponent<PlaybackControl>();
+        parent = GameObject.Find("SimulationObjects");
+    }
 
-	public void addPedestrianPosition(PedestrianPosition p) {
-		positions.Add (p);
-		PlaybackControl pc = GameObject.Find("PlaybackControl").GetComponent<PlaybackControl>();
-		if (p.getTime ()>pc.total_time) pc.total_time = p.getTime ();
-	}
+    /// <summary>
+    /// Adds a position to the internal dictionary of positions belonging to pedestrians.
+    /// </summary>
+    /// <param name="position"></param>
+    public void addPedestrianPosition(PedestrianPosition position) {
+        List<PedestrianPosition> currentPosList;
+        if (pedestrianPositions.TryGetValue(position.getID(), out currentPosList))
+        {
+            currentPosList.Add(position);
+        }
+        else
+        {
+            currentPosList = new List<PedestrianPosition>();
+            currentPosList.Add(position);
+            pedestrianPositions.Add(position.getID(), currentPosList);
+        }
+        if (position.getTime() > pc.total_time) pc.total_time = position.getTime();
+    }
 
-	public void createPedestrians() {
-		PlaybackControl pc = GameObject.Find ("PlaybackControl").GetComponent<PlaybackControl> ();
-        GameObject parent = GameObject.Find("SimulationObjects");
-		positions = positions.OrderBy(x => x.getID()).ThenBy(y => y.getTime()).ToList<PedestrianPosition>();
-		SortedList currentList = new SortedList ();
-		population = new int[(int)pc.total_time+1];
-
-		for (int i = 0; i< positions.Count;i++) {
-			currentList.Add (positions[i].getTime (),positions[i]);
-			population[(int) positions[i].getTime ()]++;
-			if ((i == (positions.Count-1) || positions[i].getID()!=positions[i+1].getID()) && currentList.Count>0) {
-
-				GameObject p = (GameObject) Instantiate(Resources.Load("Pedestrian"));
-				p.transform.parent = parent.transform;
-				p.GetComponent<Pedestrian>().setPositions(currentList);
-				p.GetComponent<Pedestrian>().setID(positions[i].getID());
-				pedestirans.Add(p);
-				currentList.Clear();
-			}
-		}
-	}
-
-
-	// Update is called once per frame
-	void Update () {
-	
-	}
+    public void createPedestrians() {
+        foreach (var pedestrianEntry in pedestrianPositions) {
+            GameObject pedestrian = (GameObject)Instantiate(Resources.Load("Pedestrian2"));
+            pedestrian.transform.parent = parent.transform;
+            Pedestrian pedComponent = pedestrian.GetComponent<Pedestrian>();
+            pedComponent.setPositions(pedestrianEntry.Value);
+            pedComponent.setID(pedestrianEntry.Key);
+            pedestrians.Add(pedComponent);
+        }
+    }
 }
