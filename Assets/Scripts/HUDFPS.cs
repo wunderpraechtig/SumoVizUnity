@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class HUDFPS : MonoBehaviour 
 {
@@ -23,7 +24,7 @@ public class HUDFPS : MonoBehaviour
 	
 	void Start()
 	{
-		if( !GetComponent<GUIText>() )
+		if( !GetComponent<Text>() )
 		{
 			Debug.Log("UtilityFramesPerSecond needs a GUIText component!");
 			enabled = false;
@@ -44,15 +45,15 @@ public class HUDFPS : MonoBehaviour
 			// display two fractional digits (f2 format)
 			float fps = accum/frames;
 			string format = System.String.Format("{0:F2} FPS",fps);
-			GetComponent<GUIText>().text = format;
+			GetComponent<Text>().text = format;
 			
 			if(fps < 30)
-				GetComponent<GUIText>().material.color = Color.yellow;
+				GetComponent<Text>().material.color = Color.yellow;
 			else 
 				if(fps < 10)
-					GetComponent<GUIText>().material.color = Color.red;
+					GetComponent<Text>().material.color = Color.red;
 			else
-				GetComponent<GUIText>().material.color = Color.green;
+				GetComponent<Text>().material.color = Color.green;
 			//	DebugConsole.Log(format,level);
 			timeleft = updateInterval;
 			accum = 0.0F;

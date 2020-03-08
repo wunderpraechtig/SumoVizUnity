@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - Main Camera
+  - Marker
   layers:
   - Default
   - TransparentFX
@@ -20,8 +21,8 @@ TagManager:
   - GeometryFloor
   - GeometryWalls
   - GeometryObstacles
-  - 
-  - 
+  - TeleportTarget
+  - WorldFloor
   - 
   - 
   - 

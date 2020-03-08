@@ -128,28 +128,27 @@ public class SettingsArmMenu : MonoBehaviour
 
     public void HandlePlaybackLocationRadioFL()
     {
-        changePlaybackLocation(ArmPanelLocation.FrontLeft, handAnchorFL, OVRInput.Controller.RTouch);
+        changePlaybackLocation(ArmPanelLocation.FrontLeft, handAnchorFL);
     }
 
     public void HandlePlaybackLocationRadioFR()
     {
-        changePlaybackLocation(ArmPanelLocation.FrontRight, handAnchorFR, OVRInput.Controller.LTouch);
+        changePlaybackLocation(ArmPanelLocation.FrontRight, handAnchorFR);
     }
 
     public void HandlePlaybackLocationRadioBL()
     {
-        changePlaybackLocation(ArmPanelLocation.BackLeft, handAnchorBL, OVRInput.Controller.RTouch);
+        changePlaybackLocation(ArmPanelLocation.BackLeft, handAnchorBL);
     }
 
     public void HandlePlaybackLocationRadioBR()
     {
-        changePlaybackLocation(ArmPanelLocation.BackRight, handAnchorBR, OVRInput.Controller.LTouch);
+        changePlaybackLocation(ArmPanelLocation.BackRight, handAnchorBR);
     }
 
-    private void changePlaybackLocation(ArmPanelLocation loc, Transform anchor, OVRInput.Controller controller) {
+    private void changePlaybackLocation(ArmPanelLocation loc, Transform anchor) {
         PlayerPrefs.SetInt("playbackLocation", (int)loc);
         playbackControl.handAnchorTransform = anchor;
-        playbackControl.requiredController = controller;
     }
 
     private string ConvertAngleToString(float value)

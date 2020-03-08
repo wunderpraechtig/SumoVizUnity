@@ -9,6 +9,7 @@ public abstract class ThemingMode : Object {
 	}
 
 	public abstract string getTerrainName();
+    public abstract Material getFloorMaterial();
 	public abstract Material getWallsMaterial();
     public abstract Material getWallsMaterialST();
     public abstract Material getWallsGlow();

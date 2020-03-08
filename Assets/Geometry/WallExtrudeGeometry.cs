@@ -4,7 +4,9 @@ using System.Collections.Generic;
 
 public class WallExtrudeGeometry : ExtrudeGeometry  {
 
-	public static void create  (string name, List<Vector2> verticesList, float height, float width, float zOffset) {
+    private static GeometryLoader gl = null;
+
+    public static void create  (string name, List<Vector2> verticesList, float height, float width, float zOffset) {
 
 		int wallpoints = verticesList.Count;
 		float wall = width;
@@ -50,7 +52,8 @@ public class WallExtrudeGeometry : ExtrudeGeometry  {
 			verticesList.Add(extrudePoint);
 		}
 
-		GeometryLoader gl = GameObject.Find ("GeometryLoader").GetComponent<GeometryLoader> ();
+		if(gl == null)
+            gl = GameObject.Find ("GeometryLoader").GetComponent<GeometryLoader> ();
 		ExtrudeGeometry.create (name, verticesList, height, zOffset, gl.theme.getWallsMaterial(), gl.theme.getWallsMaterialST(), 12);
 		
 	}

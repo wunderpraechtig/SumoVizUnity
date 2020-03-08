@@ -8,4 +8,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/SumoViz.unity
     guid: 00000000000000000000000000000000
-  m_configObjects: {}
+  m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: d7443b2f96059d242b98ad52fe9433c5,
+      type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: c4bf649ac6a0ec347b013fcf25deb5df,
+      type: 2}

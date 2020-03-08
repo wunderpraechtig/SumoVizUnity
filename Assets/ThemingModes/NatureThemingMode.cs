@@ -8,8 +8,13 @@ public class NatureThemingMode : ThemingMode {
 	{
 		return "TerrainNature";
 	}
-	
-	public override Material getWallsMaterial ()
+
+    public override Material getFloorMaterial()
+    {
+        return (Material)Resources.Load("WallSeeThrough", typeof(Material));
+    }
+
+    public override Material getWallsMaterial ()
 	{
 		return (Material) Resources.Load("WallNature", typeof(Material));
 	}

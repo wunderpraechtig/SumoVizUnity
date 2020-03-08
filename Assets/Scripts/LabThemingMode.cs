@@ -10,6 +10,11 @@ public class LabThemingMode : ThemingMode
         return "TerrainLab";
     }
 
+    public override Material getFloorMaterial()
+    {
+        return (Material)Resources.Load("WallSeeThrough", typeof(Material));
+    }
+
     public override Material getWallsMaterial()
     {
         return (Material)Resources.Load("WallLab", typeof(Material));
@@ -17,7 +22,7 @@ public class LabThemingMode : ThemingMode
 
     public override Material getWallsMaterialST()
     {
-        return (Material)Resources.Load("WallSeeThrough", typeof(Material));
+        return (Material)Resources.Load("WST2", typeof(Material));
     }
 
     public override Material getWallsGlow()
@@ -52,6 +57,8 @@ public class LabThemingMode : ThemingMode
         }
         return new Vector2(0.5f, 1 / y);
     }
+
+
 
     #endregion
 

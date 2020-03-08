@@ -150,7 +150,6 @@ public class PlaybackUIHandler : MonoBehaviour
 
     private string TimeStringFromSeconds(float time)
     {
-        
         timeSpan = System.TimeSpan.FromSeconds(time);
         return timeSpan.ToString(format);
     }

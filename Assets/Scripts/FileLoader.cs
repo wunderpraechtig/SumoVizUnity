@@ -1,36 +1,70 @@
-﻿using UnityEngine;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
 using UnityEditor;
+using UnityEngine;
 
 public class FileLoader : MonoBehaviour
 {
     [SerializeField] private GameObject miniatureNormalizer = null;
     [SerializeField] private GameObject simulationObjects = null;
-    
+    private int simulationLayers = 0x3C00;
+
     void Start()
     {
-
+        simulationLayers = LayerMask.GetMask("Pedestrian", "GeometryFloor", "GeometryWalls", "GeometryObstacles");
         GeometryLoader gl = GameObject.Find("GeometryLoader").GetComponent<GeometryLoader>();
         gl.setTheme(new LabThemingMode());
 
-        var GeometryXML = EditorUtility.OpenFilePanel(
-            "Load Geometry", "", "xml");
+    }
 
-        var TrajectoryXML = EditorUtility.OpenFilePanel(
-            "Load Trajectory", "", "xml");
+    //public void LoadWithEditorDialog()
+    //{
+    //    var GeometryXML = EditorUtility.OpenFilePanel(
+    //        "Load Geometry", "", "xml");
 
-        loadPedestrianFile(TrajectoryXML);
-        loadGeometryFile(GeometryXML);
+    //    var TrajectoryXML = EditorUtility.OpenFilePanel(
+    //        "Load Trajectory", "", "xml");
 
-        RecalculateSimulationTransform();
+    //    StartCoroutine(LoadSimulation(GeometryXML, TrajectoryXML));
+    //}
 
+    public IEnumerator LoadSimulation(string pathGeo, string pathTraj) {
+
+        yield return ClearCurrentSimulation();
+
+        if(pathGeo != "")
+            yield return loadGeometryFile(pathGeo);
+
+        if(pathTraj != "")
+            yield return loadPedestrianFile(pathTraj);
+    }
+
+    public IEnumerator ClearCurrentSimulation()
+    {
+        List<GameObject> lastSimulation = new List<GameObject>();
+        foreach (Transform child in simulationObjects.transform)
+        {
+            if ((1 << child.gameObject.layer & simulationLayers) != 0)
+            {
+                lastSimulation.Add(child.gameObject);
+            }
+
+        }
+
+        for (int i = 0; i < lastSimulation.Count; ++i)
+        {
+            Destroy(lastSimulation[i]);
+            yield return null;
+        }
     }
 
     public void RecalculateSimulationTransform()
     {
         MeshFilter[] meshFilters = simulationObjects.GetComponentsInChildren<MeshFilter>();
+        if (meshFilters.Length == 0)
+            return;
         Bounds meshBounds = new Bounds();
         foreach (MeshFilter filter in meshFilters)
         {
@@ -41,7 +75,7 @@ public class FileLoader : MonoBehaviour
         }
 
         Vector3 centeredPos = -meshBounds.center;
-        centeredPos.y = 0;
+        centeredPos.y += meshBounds.extents.y;
         simulationObjects.transform.localPosition = centeredPos;
 
         float maxExtends = meshBounds.extents.x;
@@ -52,13 +86,13 @@ public class FileLoader : MonoBehaviour
         miniatureNormalizer.transform.localScale = new Vector3(0.5f / maxExtends, 0.5f / maxExtends, 0.5f / maxExtends);
     }
 
-    void loadGeometryFile(string filename)
+    IEnumerator loadGeometryFile(string filename)
     {
 
         if (!System.IO.File.Exists(filename))
         {
             Debug.Log("Error: File " + filename + " not found.");
-            return;
+            yield break;
         }
 
         XmlDocument xmlDocGeo = new XmlDocument();
@@ -74,10 +108,10 @@ public class FileLoader : MonoBehaviour
             foreach (XmlElement room in rooms.SelectNodes("room"))
             {
                 foreach (XmlElement subroom in room.SelectNodes("subroom[@class='subroom'" +
-                													" or @class = 'Office' " +
-																	" or @class = 'Not specified' " +
-                													" or @class='Corridor']"))
-                {   
+                                                                    " or @class = 'Office' " +
+                                                                    " or @class = 'Not specified' " +
+                                                                    " or @class='Corridor']"))
+                {
                     float height = 1.0f;
                     float zOffset = TryParseWithDefault.ToSingle(subroom.GetAttribute("C_z"), 0);       //EXCEPTION: sometimes "C_z" is referred to as "C"
 
@@ -89,22 +123,27 @@ public class FileLoader : MonoBehaviour
                     foreach (XmlElement openWall in subroom.SelectNodes("polygon[@caption='wall']"))
                     {
                         WallExtrudeGeometry.create(openWall.GetAttribute("caption") + (" ") + wallNr, parsePoints(openWall), height, 0.2f, zOffset);
-                        
+
                         wallNr++;
+                        yield return null;
                     }
-					foreach (XmlElement obstacle in subroom.SelectNodes("obstacle")) 
-					{
-						foreach (XmlElement Wall in obstacle.SelectNodes("polygon")) 
-						{
-							ObstacleExtrudeGeometry.create(Wall.GetAttribute ("caption") + (" ") + wallNr, parsePoints (Wall), height, zOffset);
-							wallNr++;
-						}
-					}
-				
+                    foreach (XmlElement obstacle in subroom.SelectNodes("obstacle"))
+                    {
+                        foreach (XmlElement Wall in obstacle.SelectNodes("polygon"))
+                        {
+                            ObstacleExtrudeGeometry.create(Wall.GetAttribute("caption") + (" ") + wallNr, parsePoints(Wall), height, zOffset);
+                            wallNr++;
+                            yield return null;
+                        }
+                    }
 
 
-					FloorExtrudeGeometry.create("floor " + floorNr, parsePoints_floor(subroom), zOffset);//here is creating floor?
+                    List<Vector2> floorVertices = parsePoints_floor(subroom);
+                    FloorExtrudeGeometry.create("floor " + floorNr, floorVertices, zOffset);
+                    floorVertices.Reverse();
+                    FloorExtrudeGeometry.create("floor_r " + floorNr, floorVertices, zOffset);
                     floorNr++;
+                    yield return null;
                 }
                 foreach (XmlElement subroom in room.SelectNodes("subroom[@class='stair' or @class ='Stair'"
                                                               + "or @class='idle_escalator']"))
@@ -137,12 +176,13 @@ public class FileLoader : MonoBehaviour
                     List<Vector2> coordFirst = new List<Vector2>();
                     List<Vector2> coordSecond = new List<Vector2>();
                     foreach (XmlElement stair in subroom.SelectNodes("polygon[@caption='wall']"))
-                    {   
+                    {
                         if (lowerPart == true)
                         {
                             coordFirst = parsePoints(stair);
                             lowerPart = false;
-                        } else
+                        }
+                        else
                         {
                             coordSecond = parsePoints(stair);
                             lowerPart = true;
@@ -152,10 +192,11 @@ public class FileLoader : MonoBehaviour
 
                     StairExtrudeGeometry.create(subroom.GetAttribute("class") + (" ") + stairNr, coordFirst, coordSecond, A_x, B_y, C_z, pxUp, pyUp, pxDown, pyDown);
                     stairNr++;
-                } 
+                    yield return null;
+                }
             }
         }
-
+        RecalculateSimulationTransform();
     }
 
     static List<Vector2> parsePoints(XmlElement polyPoints)
@@ -190,44 +231,44 @@ public class FileLoader : MonoBehaviour
         return list;
     }
 
-	static List<Vector2> parsePoints_floor(XmlElement polyPoints)
-	{
-		List<Vector2> list = new List<Vector2>();
+    static List<Vector2> parsePoints_floor(XmlElement polyPoints)
+    {
+        List<Vector2> list = new List<Vector2>();
 
-		foreach (XmlElement vertex in polyPoints.SelectNodes("vertex"))
-		{
-			float x;
-			float y;
-			if (float.TryParse(vertex.GetAttribute("px"), out x) && float.TryParse(vertex.GetAttribute("py"), out y))
-			{
-				list.Add(new Vector2(x, y));
-			}
-		}
+        foreach (XmlElement vertex in polyPoints.SelectNodes("vertex"))
+        {
+            float x;
+            float y;
+            if (float.TryParse(vertex.GetAttribute("px"), out x) && float.TryParse(vertex.GetAttribute("py"), out y))
+            {
+                list.Add(new Vector2(x, y));
+            }
+        }
 
-		foreach (XmlElement openWall in polyPoints.SelectNodes("polygon[@caption='wall']"))  //used to list vertices of all walls in a subroom to create the floor
-		{
-			foreach (XmlElement vertex in openWall.SelectNodes("vertex"))
-			{
-				float x;
-				float y;
-				if (float.TryParse(vertex.GetAttribute("px"), out x) && float.TryParse(vertex.GetAttribute("py"), out y))
-				{
-					list.Add(new Vector2(x, y));
-				}
-			}
-		}
+        foreach (XmlElement openWall in polyPoints.SelectNodes("polygon[@caption='wall']"))  //used to list vertices of all walls in a subroom to create the floor
+        {
+            foreach (XmlElement vertex in openWall.SelectNodes("vertex"))
+            {
+                float x;
+                float y;
+                if (float.TryParse(vertex.GetAttribute("px"), out x) && float.TryParse(vertex.GetAttribute("py"), out y))
+                {
+                    list.Add(new Vector2(x, y));
+                }
+            }
+        }
 
-		list = SortNodes(ref list);
+        list = SortNodes(ref list);
 
-		return list;
-	}
+        return list;
+    }
 
-    void loadPedestrianFile(string filename)
+    IEnumerator loadPedestrianFile(string filename)
     {
         if (!System.IO.File.Exists(filename))
         {
             Debug.Log("Error: File " + filename + " not found.");
-            return;
+            yield break;
         }
 
         XmlDocument xmlDocTraj = new XmlDocument();
@@ -235,21 +276,23 @@ public class FileLoader : MonoBehaviour
 
         PedestrianLoader pl = GameObject.Find("PedestrianLoader").GetComponent<PedestrianLoader>();
 
+        pl.Clear();
+
         XmlNode trajectories = xmlDocTraj.SelectSingleNode("//trajectories");
 
         int fps = 8, FrameID;  //8 is used as a default framerate. Actual value is read from xmlDocTraj
 
         foreach (XmlElement header in trajectories.SelectNodes("header"))
         {
-            
+
             XDocument doc = XDocument.Load(filename);
             var fpsInput = doc.Descendants("frameRate");
 
             foreach (var fpsVal in fpsInput)
             {
                 if (float.Parse(fpsVal.Value) != 0)
-                    fps = (int) float.Parse(fpsVal.Value);
-            }  
+                    fps = (int)float.Parse(fpsVal.Value);
+            }
         }
 
         foreach (XmlElement frame in trajectories.SelectNodes("frame"))
@@ -264,52 +307,53 @@ public class FileLoader : MonoBehaviour
                     int id;
                     float x;
                     float y;
-                    float z;     
+                    float z;
                     float.TryParse(frame.GetAttribute("ID"), out time);
                     int.TryParse(agent.GetAttribute("ID"), out id);
                     float.TryParse(agent.GetAttribute("x"), out x);
                     float.TryParse(agent.GetAttribute("y"), out y);
                     float.TryParse(agent.GetAttribute("z"), out z);
-                    pl.addPedestrianPosition(new PedestrianPosition(id, time /fps, x, y, z));
+                    pl.addPedestrianPosition(new PedestrianPosition(id, time / fps, x, y, z));
                 }
             }
         }
-        pl.createPedestrians();
+        yield return pl.createPedestrians();
     }
 
 
-		
-	static List<Vector2> SortNodes(ref List<Vector2> PointSet)//, List<Node> ch
-	{
-		// remove same nodes.
-		for ( int i = 0; i < PointSet.Count; i++)  //loop num 
-		{
-			for ( int j = PointSet.Count - 1 ; j > i; j--)  //comparison num 
-			{
 
-				if (PointSet[i].x == PointSet[j].x&&PointSet[i].y==PointSet[j].y)
-				{
-					PointSet.RemoveAt(j);
-				}
+    static List<Vector2> SortNodes(ref List<Vector2> PointSet)//, List<Node> ch
+    {
+        // remove same nodes.
+        for (int i = 0; i < PointSet.Count; i++)  //loop num 
+        {
+            for (int j = PointSet.Count - 1; j > i; j--)  //comparison num 
+            {
 
-			}
-		}
+                if (PointSet[i].x == PointSet[j].x && PointSet[i].y == PointSet[j].y)
+                {
+                    PointSet.RemoveAt(j);
+                }
 
-	
-		ConvexAogrithm ca = new ConvexAogrithm(PointSet); 
-		Vector2 p; 
-		ca.GetNodesByAngle(out p); 
-		Stack<Vector2> p_nodes = ca.SortedNodes; 
-		PointSet.Clear ();
-		Vector2[] vlist = new Vector2[1];
-		vlist = p_nodes.ToArray ();
-		for (int m = 0; m < vlist.Length; m++) {
-			PointSet.Add (vlist [m]);
-		}
+            }
+        }
 
 
-		return PointSet;
-	
-	}
+        ConvexAogrithm ca = new ConvexAogrithm(PointSet);
+        Vector2 p;
+        ca.GetNodesByAngle(out p);
+        Stack<Vector2> p_nodes = ca.SortedNodes;
+        PointSet.Clear();
+        Vector2[] vlist = new Vector2[1];
+        vlist = p_nodes.ToArray();
+        for (int m = 0; m < vlist.Length; m++)
+        {
+            PointSet.Add(vlist[m]);
+        }
+
+
+        return PointSet;
+
+    }
 
 }

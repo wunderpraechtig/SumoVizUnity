@@ -9,14 +9,19 @@ public class CityThemingMode : ThemingMode {
 		return "TerrainCity";
 	}
 
-	public override Material getWallsMaterial ()
+    public override Material getFloorMaterial()
+    {
+        return (Material)Resources.Load("WallSeeThrough", typeof(Material));
+    }
+
+    public override Material getWallsMaterial ()
 	{
 		return (Material) Resources.Load("WallCity", typeof(Material));
 	} 
 
     public override Material getWallsMaterialST()
     {
-        return (Material)Resources.Load("WallSeeThrough", typeof(Material));
+        return (Material)Resources.Load("WST2", typeof(Material));
     }
 
     public override Material getWallsGlow()

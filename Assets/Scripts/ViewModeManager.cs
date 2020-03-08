@@ -1,35 +1,71 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
 
 public class ViewModeManager : MonoBehaviour
 {
-    private MiniatureViewMode miniatureViewMode;
+    [System.Serializable]
+    public enum ViewMode { Miniature = 0, Fullsize };
+
+    [SerializeField] private MiniatureViewMode miniatureViewMode = null;
+    [SerializeField] private FullsizeViewMode fullsizeViewMode = null;
+
+    public event Action<ViewMode> viewModeEvent;
+    ViewMode currentViewMode = ViewMode.Miniature;
+    public ViewMode CurrentViewMode {
+        get { return currentViewMode; }
+        set {
+            if (currentViewMode != value) {
+                currentViewMode = value;
+                viewModeEvent.Invoke(currentViewMode);
+                if (currentViewMode == ViewMode.Miniature)
+                    enableMiniatureViewMode();
+                else
+                    enableFullsizeViewMode();
+            }
+        }
+    }
+    
 
     private void Awake()
     {
-        miniatureViewMode = FindObjectOfType<MiniatureViewMode>();
+        LoadViewMode();
     }
 
     private void Start()
     {
-        EnableMiniatureMode();
+        if (CurrentViewMode == ViewMode.Miniature)
+        {
+            enableMiniatureViewMode();
+        }
+        else
+        {
+            enableFullsizeViewMode();
+        }
     }
 
-    public void EnableMiniatureMode()
+    private void LoadViewMode()
     {
-        Physics.IgnoreLayerCollision(9, 11);
-        Physics.IgnoreLayerCollision(9, 12);
-        Physics.IgnoreLayerCollision(9, 13);
-        miniatureViewMode.EnableMiniatureMode();
+        if (PlayerPrefs.HasKey("PlayState"))
+            CurrentViewMode = (ViewMode)PlayerPrefs.GetInt("PlayState");
+        else
+        {
+            PlayerPrefs.SetInt("PlayState", (int)CurrentViewMode);
+        }
+    }
+
+    public void enableMiniatureViewMode()
+    {
+        fullsizeViewMode.SaveState();
+        miniatureViewMode.Enable();
+        fullsizeViewMode.gameObject.SetActive(false);
         miniatureViewMode.gameObject.SetActive(true);
     }
 
-    public void DisableMiniatureMode()
+    public void enableFullsizeViewMode()
     {
-        Physics.IgnoreLayerCollision(9, 11, false);
-        Physics.IgnoreLayerCollision(9, 12, false);
-        Physics.IgnoreLayerCollision(9, 13, false);
+        miniatureViewMode.SaveState();
+        fullsizeViewMode.Enable();
         miniatureViewMode.gameObject.SetActive(false);
+        fullsizeViewMode.gameObject.SetActive(true);
     }
 }

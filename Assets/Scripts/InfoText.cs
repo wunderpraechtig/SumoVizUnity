@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 using Vectrosity;
+using UnityEngine.UI;
 
 public struct Entry
 {
@@ -169,7 +170,7 @@ public class InfoText : MonoBehaviour {
 				}
 			}
 		}
-		GetComponent<GUIText>().text = text;
+		GetComponent<Text>().text = text;
 
 		if (diagram) {
 

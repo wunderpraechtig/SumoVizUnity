@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Vectrosity;
+using UnityEngine.XR.Interaction.Toolkit;
 
 public class Groundplane : MonoBehaviour {
 
@@ -18,12 +19,7 @@ public class Groundplane : MonoBehaviour {
 	public float crossingSpeed = 0.0f;
 	public float avgFlow = 0.0f;
 
-	// Use this for initialization
-	void Start () {
-
-	}
-
-	void OnMouseDown(){
+    void OnMouseDown(){
 	
 		PlaybackControl pc = GameObject.Find ("PlaybackControl").GetComponent<PlaybackControl> ();
 

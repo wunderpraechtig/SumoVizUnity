@@ -168,7 +168,8 @@ public class StairExtrudeGeometry : Geometry
         MeshCollider collider = stair.AddComponent<MeshCollider>();
         collider.convex = true;
         stair.layer = 11; // geometry floor
-        stair.transform.localPosition = new Vector3(0, 0, 0);
+        stair.transform.localPosition = Vector3.zero;
+        stair.transform.localScale = Vector3.one;
     }
 
     static List<float> angleToOrigin(Vector2[] pointsArray, Vector2 origin)

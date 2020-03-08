@@ -5,21 +5,22 @@ using UnityEngine.Events;
 
 public class GameState : MonoBehaviour
 {
-    [SerializeField] private bool                isPlaying = false;
-    [SerializeField] private float             currentTime;
-    [SerializeField] private float             totalTime;
-    [SerializeField] private TileColoringMode    pawnColoringMode = TileColoringMode.TileColoringNone;
-    [SerializeField] private bool                trajectoriesShown;
-    [SerializeField] private float               densityThreshold;
 
-    public event Action<bool>               isPlayingEvent;
-    public event Action<float>            currentTimeEvent;
-    public event Action<float>            totalTimeEvent;
-    public event Action<TileColoringMode>   coloringModeEvent;
-    public event Action<bool>               trajectoryModeEvent;
-    public event Action<float>              densityThresholdEvent;
+    [SerializeField] private bool isPlaying = false;
+    [SerializeField] private float currentTime;
+    [SerializeField] private float totalTime;
+    [SerializeField] private TileColoringMode pawnColoringMode = TileColoringMode.TileColoringNone;
+    [SerializeField] private bool trajectoriesShown;
+    [SerializeField] private float densityThreshold;
 
-    
+    public event Action<bool> isPlayingEvent;
+    public event Action<float> currentTimeEvent;
+    public event Action<float> totalTimeEvent;
+    public event Action<TileColoringMode> coloringModeEvent;
+    public event Action<bool> trajectoryModeEvent;
+    public event Action<float> densityThresholdEvent;
+
+
 
     private void Start()
     {
@@ -50,6 +51,7 @@ public class GameState : MonoBehaviour
     public float CurrentTime {
         get { return currentTime; }
         set {
+            if (float.IsNaN(value)) value = 0.0f;
             if (value != currentTime)
             {
                 currentTime = value;
@@ -61,6 +63,7 @@ public class GameState : MonoBehaviour
     public float TotalTime {
         get { return totalTime; }
         set {
+            if (float.IsNaN(value)) value = 0.0f;
             if (value != totalTime)
             {
                 totalTime = value;

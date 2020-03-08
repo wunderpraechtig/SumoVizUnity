@@ -1,10 +1,5 @@
-﻿using UnityEngine;
-using System;
-using System.Collections;
-
-using System.Collections.Generic;
-using System.IO;
-using Vectrosity;
+﻿using System;
+using UnityEngine;
 
 public class PlaybackControl : MonoBehaviour
 {

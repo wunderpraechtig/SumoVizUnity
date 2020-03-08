@@ -8,14 +8,14 @@ public class MiniatureViewControl : MonoBehaviour
 
     private HandFunction functionLeft = HandFunction.Move;
     private HandFunction functionRight = HandFunction.Rotate;
-
-    public OVRInput.Axis1D leftGrabberAxis = OVRInput.Axis1D.PrimaryHandTrigger;
-    public OVRInput.Axis1D rightGrabberAxis = OVRInput.Axis1D.SecondaryHandTrigger;
+    private HandManager handManager = null;
+    public bool IsHeightLocked { get; set; } = true;
 
     [SerializeField] private Transform leftHandAnchor = null;
     [SerializeField] private Transform rightHandAnchor = null;
     [SerializeField] private Transform miniatureScaleRotate = null;
     [SerializeField] private Transform miniatureMove = null;
+    [SerializeField] private Transform miniaturePedestal = null;
     [SerializeField] private bool grabbingLeftHand = false;
     [SerializeField] private bool grabbingRightHand = false;
     [SerializeField] private float grabThreshold = 0.9f;
@@ -27,6 +27,7 @@ public class MiniatureViewControl : MonoBehaviour
 
     [SerializeField] private Vector3 savedMiniaturePosGlobal;
     [SerializeField] private Vector3 savedMiniaturePos;
+    [SerializeField] private Vector3 savedPedestalPos;
     [SerializeField] private Quaternion savedMiniatureRot;
     [SerializeField] private Vector3 savedMiniatureScale;
 
@@ -34,9 +35,13 @@ public class MiniatureViewControl : MonoBehaviour
     [SerializeField] private Vector3 rotInitialVec;
     [SerializeField] private Vector3 rotNewVec;
 
+    private void Awake() {
+        handManager = FindObjectOfType<HandManager>();
+    }
+
     void Update()
     {
-        if (OVRInput.Get(leftGrabberAxis) > grabThreshold)
+        if (handManager.axisLeftGrip.getState(grabThreshold))
         {
             if (!grabbingLeftHand) // when not already grabbing
             {
@@ -77,7 +82,7 @@ public class MiniatureViewControl : MonoBehaviour
             grabbingLeftHand = false;
         }
 
-        if (OVRInput.Get(rightGrabberAxis) > grabThreshold)
+        if (handManager.axisRightGrip.getState(grabThreshold))
         {
             if (!grabbingRightHand) // when not already grabbing
             {
@@ -140,9 +145,16 @@ public class MiniatureViewControl : MonoBehaviour
             if (currentFunction == HandFunction.Move)
             {
                 Vector3 diff = (currentHandAnchor.localPosition - grabPointMove);
+                float heightDiff = diff.y;
                 diff.y = 0;
                 diff = diff * (1/miniatureScaleRotate.localScale.x);
                 miniatureMove.localPosition = Quaternion.Inverse(miniatureScaleRotate.rotation) * (savedMiniaturePos + diff);
+
+                if (!IsHeightLocked) {
+                    Vector3 pedestalPos = savedPedestalPos;
+                    pedestalPos.y += heightDiff;
+                    miniaturePedestal.localPosition = pedestalPos;
+                }
             }
             else
             {
@@ -168,6 +180,7 @@ public class MiniatureViewControl : MonoBehaviour
     void saveMiniaturePosition() {
         savedMiniaturePosGlobal = miniatureMove.position;
         savedMiniaturePos = miniatureScaleRotate.localRotation * miniatureMove.localPosition;
+        savedPedestalPos = miniaturePedestal.localPosition;
         savedMiniatureRot = miniatureScaleRotate.localRotation;
         savedMiniatureScale = miniatureScaleRotate.localScale;
     }

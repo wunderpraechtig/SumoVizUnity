@@ -12,13 +12,15 @@ public class ExtrudeGeometry : Geometry  {
             geometryContainer = GameObject.Find("SimulationObjects");
 
         GameObject container = new GameObject(name);
+        container.layer = layer;
         container.transform.parent = geometryContainer.transform;
-        GameObject obstacle = new GameObject (name + "_top", typeof(MeshFilter), typeof(MeshRenderer));
-		MeshFilter mesh_filter = obstacle.GetComponent<MeshFilter> ();
-        obstacle.transform.parent = container.transform;
+        GameObject obj_top = new GameObject (name + "_top", typeof(MeshFilter), typeof(MeshRenderer));
+        obj_top.layer = layer;
+        MeshFilter mesh_filter_top = obj_top.GetComponent<MeshFilter> ();
+        obj_top.transform.parent = container.transform;
         //Shadows currently disabled for TopMaterial   -> switch on by    ShadowCastingMode.On
-        obstacle.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        obstacle.GetComponent<Renderer>().material = topMaterial;
+        obj_top.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        obj_top.GetComponent<Renderer>().material = topMaterial;
 
 		Vector2[] vertices2D = verticesList.ToArray();
 
@@ -38,11 +40,13 @@ public class ExtrudeGeometry : Geometry  {
 		}
 
 		// Create the mesh
-		Mesh mesh = new Mesh();
-        GameObject walls = new GameObject (name + "_side", typeof(MeshFilter), typeof(MeshRenderer));
-		MeshFilter mesh_filter_walls = walls.GetComponent<MeshFilter> ();
-		walls.GetComponent<Renderer>().material = sideMaterial;
-        walls.transform.parent = container.transform;
+		Mesh mesh_top = new Mesh();
+        GameObject obj_walls = new GameObject (name + "_side", typeof(MeshFilter), typeof(MeshRenderer));
+		MeshFilter mesh_filter_walls = obj_walls.GetComponent<MeshFilter> ();
+        obj_walls.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        obj_walls.GetComponent<Renderer>().material = sideMaterial;
+        obj_walls.transform.parent = container.transform;
+
         List<Vector2> uvs_walls = new List<Vector2>();
 		List<Vector3> vertices_walls = new List<Vector3>();
 		List<int> indices_walls = new List<int>();
@@ -91,25 +95,26 @@ public class ExtrudeGeometry : Geometry  {
 		mesh_filter_walls.mesh = mesh_walls;
 	
 
-		mesh.vertices = vertices.ToArray();
-		mesh.uv = verticesList.ToArray();
-		mesh.triangles = indices.ToArray();
-		mesh.RecalculateNormals();
-		mesh.RecalculateBounds();
+		mesh_top.vertices = vertices.ToArray();
+		mesh_top.uv = verticesList.ToArray();
+		mesh_top.triangles = indices.ToArray();
+		mesh_top.RecalculateNormals();
+		mesh_top.RecalculateBounds();
 
 		//flip if needed
-		if (mesh.normals [0].y == -1) {
+		if (mesh_top.normals [0].y == -1) {
 			indices.Reverse ();
-			mesh.triangles = indices.ToArray ();
-			mesh.RecalculateNormals();
+			mesh_top.triangles = indices.ToArray ();
+			mesh_top.RecalculateNormals();
 		}
-		mesh = TangentHelper.TangentSolver (mesh);
+		mesh_top = TangentHelper.TangentSolver (mesh_top);
 
-		mesh_filter.mesh = mesh;
+		mesh_filter_top.mesh = mesh_top;
 
-        MeshCollider collider = walls.AddComponent<MeshCollider>();
-        walls.layer = layer;
-        container.transform.localPosition = new Vector3(0, 0, 0);
+        MeshCollider collider = obj_walls.AddComponent<MeshCollider>();
+        obj_walls.layer = layer;
+        container.transform.localPosition = Vector3.zero;
+        container.transform.localScale = Vector3.one;
     }
 }
 
