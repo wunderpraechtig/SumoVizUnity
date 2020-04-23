@@ -278,7 +278,7 @@ namespace SimpleFileBrowser
 
 		#region Properties
 		private string m_currentPath = string.Empty;
-		private string CurrentPath
+		public string CurrentPath
 		{
 			get { return m_currentPath; }
 			set

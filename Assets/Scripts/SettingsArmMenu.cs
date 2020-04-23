@@ -7,6 +7,7 @@ public class SettingsArmMenu : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private ArmPanelController playbackControl = null;
+    [SerializeField] private ArmPanelController modeControl = null;
     [SerializeField] Transform handAnchorFL = null;
     [SerializeField] Transform handAnchorFR = null;
     [SerializeField] Transform handAnchorBL = null;
@@ -17,6 +18,12 @@ public class SettingsArmMenu : MonoBehaviour
     [SerializeField] private Toggle radioPlaybackFR = null;
     [SerializeField] private Toggle radioPlaybackBL = null;
     [SerializeField] private Toggle radioPlaybackBR = null;
+
+    [SerializeField] private Toggle toggleModeEnabled = null;
+    [SerializeField] private Toggle radioModeFL = null;
+    [SerializeField] private Toggle radioModeFR = null;
+    [SerializeField] private Toggle radioModeBL = null;
+    [SerializeField] private Toggle radioModeBR = null;
 
     [SerializeField] private TextMeshProUGUI textAngleHandToCam = null;
     [SerializeField] private TextMeshProUGUI textAngleCamToHand = null;
@@ -41,6 +48,10 @@ public class SettingsArmMenu : MonoBehaviour
 
         LoadPlaybackLocation();
 
+        LoadModeEnabled();
+
+        LoadModeLocation();
+
         LoadAngleCamToHand();
 
         LoadAngleHandToCam();
@@ -58,6 +69,18 @@ public class SettingsArmMenu : MonoBehaviour
             PlayerPrefs.SetInt("playbackEnabled", Convert.ToInt32(playbackControl.enabled));
         }
         playbackControl.gameObject.SetActive(togglePlaybackEnabled.isOn);
+    }
+
+    private void LoadModeEnabled()
+    {
+        if (PlayerPrefs.HasKey("modeEnabled"))
+            toggleModeEnabled.SetIsOnWithoutNotify(Convert.ToBoolean(PlayerPrefs.GetInt("modeEnabled")));
+        else
+        {
+            toggleModeEnabled.SetIsOnWithoutNotify(modeControl.enabled);
+            PlayerPrefs.SetInt("modeEnabled", Convert.ToInt32(modeControl.enabled));
+        }
+        modeControl.gameObject.SetActive(toggleModeEnabled.isOn);
     }
 
     private void LoadPlaybackLocation()
@@ -86,6 +109,34 @@ public class SettingsArmMenu : MonoBehaviour
             radioPlaybackBR.SetIsOnWithoutNotify(true);
         }
             
+    }
+
+    private void LoadModeLocation()
+    {
+        ArmPanelLocation loc = ArmPanelLocation.BackRight;
+        if (PlayerPrefs.HasKey("modeLocation"))
+            loc = (ArmPanelLocation)PlayerPrefs.GetInt("modeLocation");
+        if (loc == ArmPanelLocation.FrontLeft)
+        {
+            HandleModeLocationRadioFL();
+            radioModeFL.SetIsOnWithoutNotify(true);
+        }
+        if (loc == ArmPanelLocation.FrontRight)
+        {
+            HandleModeLocationRadioFR();
+            radioModeFR.SetIsOnWithoutNotify(true);
+        }
+        if (loc == ArmPanelLocation.BackLeft)
+        {
+            HandleModeLocationRadioBL();
+            radioModeBL.SetIsOnWithoutNotify(true);
+        }
+        if (loc == ArmPanelLocation.BackRight)
+        {
+            HandleModeLocationRadioBR();
+            radioModeBR.SetIsOnWithoutNotify(true);
+        }
+
     }
 
     private void LoadAngleCamToHand()
@@ -126,6 +177,12 @@ public class SettingsArmMenu : MonoBehaviour
         playbackControl.gameObject.SetActive(togglePlaybackEnabled.isOn);
     }
 
+    public void HandleModeToggle()
+    {
+        PlayerPrefs.SetInt("modeEnabled", Convert.ToInt32(toggleModeEnabled.isOn));
+        modeControl.gameObject.SetActive(toggleModeEnabled.isOn);
+    }
+
     public void HandlePlaybackLocationRadioFL()
     {
         changePlaybackLocation(ArmPanelLocation.FrontLeft, handAnchorFL);
@@ -146,9 +203,35 @@ public class SettingsArmMenu : MonoBehaviour
         changePlaybackLocation(ArmPanelLocation.BackRight, handAnchorBR);
     }
 
+    public void HandleModeLocationRadioFL()
+    {
+        changeModeLocation(ArmPanelLocation.FrontLeft, handAnchorFL);
+    }
+
+    public void HandleModeLocationRadioFR()
+    {
+        changeModeLocation(ArmPanelLocation.FrontRight, handAnchorFR);
+    }
+
+    public void HandleModeLocationRadioBL()
+    {
+        changeModeLocation(ArmPanelLocation.BackLeft, handAnchorBL);
+    }
+
+    public void HandleModeLocationRadioBR()
+    {
+        changeModeLocation(ArmPanelLocation.BackRight, handAnchorBR);
+    }
+
     private void changePlaybackLocation(ArmPanelLocation loc, Transform anchor) {
         PlayerPrefs.SetInt("playbackLocation", (int)loc);
         playbackControl.handAnchorTransform = anchor;
+    }
+
+    private void changeModeLocation(ArmPanelLocation loc, Transform anchor)
+    {
+        PlayerPrefs.SetInt("modeLocation", (int)loc);
+        modeControl.handAnchorTransform = anchor;
     }
 
     private string ConvertAngleToString(float value)
@@ -163,6 +246,7 @@ public class SettingsArmMenu : MonoBehaviour
         if (sliderCamToHand.value != value)
             sliderCamToHand.SetValueWithoutNotify(value);
         playbackControl.maxAngleCamToDisplay = value;
+        modeControl.maxAngleCamToDisplay = value;
     }
 
     public void HandleAngleCamToHand()
@@ -177,6 +261,7 @@ public class SettingsArmMenu : MonoBehaviour
         if (sliderHandToCam.value != value)
             sliderHandToCam.SetValueWithoutNotify(value);
         playbackControl.maxAngleDisplayToCam = value;
+        modeControl.maxAngleDisplayToCam = value;
     }
 
     public void HandleAngleHandToCam()
@@ -191,6 +276,7 @@ public class SettingsArmMenu : MonoBehaviour
         if (sliderZRotMax.value != value)
             sliderZRotMax.SetValueWithoutNotify(value);
         playbackControl.maxZRotationDifference = value;
+        modeControl.maxZRotationDifference = value;
     }
 
     public void HandleAngleZRotMax()

@@ -27,7 +27,6 @@ public class FloorExtrudeGeometry : Geometry
         mesh.Clear();
 
         floor.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        floor.GetComponent<Renderer>().material = sideMaterial;
 
         Vector2[] vertices2D = verticesList.ToArray();
 
@@ -73,4 +72,44 @@ public class FloorExtrudeGeometry : Geometry
         tpArea.setTeleportationManager(tpm);
         floor.transform.localScale = Vector3.one;
     }
+
+    public static void CreateMesh(string name, List<Vector2> verticesList, float zOffset, ref List<Mesh> floorMeshes)
+    {
+        Mesh mesh = new Mesh();
+
+        Vector2[] vertices2D = verticesList.ToArray();
+
+        Triangulator tr = new Triangulator(vertices2D);
+        int[] indicesUp = tr.Triangulate();
+
+        // Generate indices for the ceiling
+        int[] indices = new int[indicesUp.Length * 2];
+
+        for (int i = 0; i < indicesUp.Length; ++i)
+        {
+            indices[i] = indicesUp[i];
+        }
+        for (int i = 0; i < indicesUp.Length; ++i)
+        {
+            int index = indicesUp.Length - (1 + i);
+            indices[i + indicesUp.Length] = indicesUp[index];
+        }
+
+        // Create the Vector3 vertices
+        Vector3[] vertices = new Vector3[vertices2D.Length];
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            vertices[i] = new Vector3(vertices2D[i].x, zOffset - 0.0001f, vertices2D[i].y);
+        }
+
+        // Create the mesh
+        mesh = TangentHelper.TangentSolver(mesh);
+        mesh.vertices = vertices;
+        mesh.triangles = indices;
+        //mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+
+        floorMeshes.Add(mesh);
+    }
+
 }

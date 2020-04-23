@@ -22,6 +22,15 @@ public class MainMenuLogic : MonoBehaviour
 
     private void Start()
     {
+
+        SetupFileBrowser();
+
+        gameObject.SetActive(false);
+        ResetMenus();
+    }
+
+    private void SetupFileBrowser() {
+        fileBrowser.gameObject.SetActive(true);
         // Set filters (optional)
         // It is sufficient to set the filters just once (instead of each time before showing the file browser dialog), 
         // if all the dialogs will be using the same filters
@@ -31,8 +40,11 @@ public class MainMenuLogic : MonoBehaviour
         // Returns true if the default filter is set successfully
         // In this case, set Images filter as the default filter
         FileBrowser.SetDefaultFilter(".xml");
-        gameObject.SetActive(false);
-        ResetMenus();
+
+        if (PlayerPrefs.HasKey("lastFilepath")) {
+            fileBrowser.CurrentPath = PlayerPrefs.GetString("lastFilepath");
+        }
+        fileBrowser.gameObject.SetActive(false);
     }
 
     public void ToggleMainMenu() {
@@ -71,13 +83,15 @@ public class MainMenuLogic : MonoBehaviour
     }
 
     public void HandleQuit() {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
         Application.Quit();
+#endif
     }
 
     IEnumerator LoadSimulation()
     {
-        //fileLoader.LoadWithEditorDialog();
-
         string pathGeometry = "";
         string pathTrajectories = "";
         bool successGeometry = false;
@@ -87,13 +101,13 @@ public class MainMenuLogic : MonoBehaviour
 
         successGeometry = FileBrowser.Success;
         pathGeometry = FileBrowser.Result;
-        Debug.Log(FileBrowser.Success + " " + FileBrowser.Result);
 
         yield return FileBrowser.WaitForLoadDialog(false, null, "Load Trajectories", "Load");
 
         successTrajectories = FileBrowser.Success;
         pathTrajectories = FileBrowser.Result;
-        Debug.Log(FileBrowser.Success + " " + FileBrowser.Result);
+        
+        PlayerPrefs.SetString("lastFilepath", pathTrajectories);
 
         StartCoroutine(fileLoader.ClearCurrentSimulation());
 

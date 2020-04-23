@@ -13,6 +13,7 @@ public class PedestrianLoader : MonoBehaviour {
 
     public List<Pedestrian> pedestrians = new List<Pedestrian>();
     public int[] population;
+    public string pedestrianPrefab = "Pedestrian_simple";
 
     private void Awake()
     {
@@ -47,9 +48,10 @@ public class PedestrianLoader : MonoBehaviour {
 
     public IEnumerator createPedestrians() {
         foreach (var pedestrianEntry in pedestrianPositions) {
-            GameObject pedestrian = (GameObject)Instantiate(Resources.Load("Pedestrian2"));
+            GameObject pedestrian = (GameObject)Instantiate(Resources.Load(pedestrianPrefab));
             pedestrian.transform.parent = parent.transform;
             pedestrian.transform.localScale = Vector3.one;
+            pedestrian.transform.localRotation = Quaternion.Euler(0, 0, 0);
             Pedestrian pedComponent = pedestrian.GetComponent<Pedestrian>();
             pedComponent.setPositions(pedestrianEntry.Value);
             pedComponent.setID(pedestrianEntry.Key);

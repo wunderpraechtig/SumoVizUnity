@@ -4,19 +4,21 @@ using System.Xml;
 using System.Xml.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
 
 public class FileLoader : MonoBehaviour
 {
     [SerializeField] private GameObject miniatureNormalizer = null;
     [SerializeField] private GameObject simulationObjects = null;
+    private GeometryLoader gl;
     private int simulationLayers = 0x3C00;
 
     void Start()
     {
         simulationLayers = LayerMask.GetMask("Pedestrian", "GeometryFloor", "GeometryWalls", "GeometryObstacles");
-        GeometryLoader gl = GameObject.Find("GeometryLoader").GetComponent<GeometryLoader>();
+        gl = GameObject.Find("GeometryLoader").GetComponent<GeometryLoader>();
         gl.setTheme(new LabThemingMode());
-
+        //LoadWithEditorDialog();
     }
 
     //public void LoadWithEditorDialog()
@@ -65,24 +67,26 @@ public class FileLoader : MonoBehaviour
         MeshFilter[] meshFilters = simulationObjects.GetComponentsInChildren<MeshFilter>();
         if (meshFilters.Length == 0)
             return;
-        Bounds meshBounds = new Bounds();
+
+        Bounds firstMeshBounds = meshFilters[0].mesh.bounds;
+        Bounds combinedBounds = new Bounds(firstMeshBounds.center, firstMeshBounds.extents);
         foreach (MeshFilter filter in meshFilters)
         {
             if (filter.mesh != null)
             {
-                meshBounds.Encapsulate(filter.mesh.bounds);
+                combinedBounds.Encapsulate(filter.mesh.bounds);
             }
         }
 
-        Vector3 centeredPos = -meshBounds.center;
-        centeredPos.y += meshBounds.extents.y;
+        Vector3 centeredPos = -combinedBounds.center;
+        centeredPos.y += combinedBounds.extents.y;
         simulationObjects.transform.localPosition = centeredPos;
 
-        float maxExtends = meshBounds.extents.x;
-        if (maxExtends < meshBounds.extents.y)
-            maxExtends = meshBounds.extents.y;
-        if (maxExtends < meshBounds.extents.z)
-            maxExtends = meshBounds.extents.z;
+        float maxExtends = combinedBounds.extents.x;
+        if (maxExtends < combinedBounds.extents.y)
+            maxExtends = combinedBounds.extents.y;
+        if (maxExtends < combinedBounds.extents.z)
+            maxExtends = combinedBounds.extents.z;
         miniatureNormalizer.transform.localScale = new Vector3(0.5f / maxExtends, 0.5f / maxExtends, 0.5f / maxExtends);
     }
 
@@ -94,6 +98,11 @@ public class FileLoader : MonoBehaviour
             Debug.Log("Error: File " + filename + " not found.");
             yield break;
         }
+
+        List<Mesh> meshesFloor = new List<Mesh>();
+        List<Mesh> meshesWallSide = new List<Mesh>();
+        List<Mesh> meshesWallTop = new List<Mesh>();
+        List<Mesh> meshesStairs = new List<Mesh>();
 
         XmlDocument xmlDocGeo = new XmlDocument();
         xmlDocGeo.LoadXml(System.IO.File.ReadAllText(filename));
@@ -122,28 +131,29 @@ public class FileLoader : MonoBehaviour
 
                     foreach (XmlElement openWall in subroom.SelectNodes("polygon[@caption='wall']"))
                     {
-                        WallExtrudeGeometry.create(openWall.GetAttribute("caption") + (" ") + wallNr, parsePoints(openWall), height, 0.2f, zOffset);
+                        WallExtrudeGeometry.CreateMeshes(openWall.GetAttribute("caption") + (" ") + wallNr, parsePoints(openWall), height, 0.2f, zOffset, ref meshesWallSide, ref meshesWallTop);
 
                         wallNr++;
-                        yield return null;
+                        //yield return null;
                     }
                     foreach (XmlElement obstacle in subroom.SelectNodes("obstacle"))
                     {
                         foreach (XmlElement Wall in obstacle.SelectNodes("polygon"))
                         {
-                            ObstacleExtrudeGeometry.create(Wall.GetAttribute("caption") + (" ") + wallNr, parsePoints(Wall), height, zOffset);
+                            ObstacleExtrudeGeometry.CreateMeshes(Wall.GetAttribute("caption") + (" ") + wallNr, parsePoints(Wall), height, zOffset, ref meshesWallSide, ref meshesWallTop);
                             wallNr++;
-                            yield return null;
+                            //yield return null;
                         }
                     }
 
 
                     List<Vector2> floorVertices = parsePoints_floor(subroom);
-                    FloorExtrudeGeometry.create("floor " + floorNr, floorVertices, zOffset);
+                    //FloorExtrudeGeometry.create("floor " + floorNr, floorVertices, zOffset);
+                    FloorExtrudeGeometry.CreateMesh("floor " + floorNr, floorVertices, zOffset, ref meshesFloor);
                     floorVertices.Reverse();
-                    FloorExtrudeGeometry.create("floor_r " + floorNr, floorVertices, zOffset);
+                    FloorExtrudeGeometry.CreateMesh("floor_r " + floorNr, floorVertices, zOffset, ref meshesFloor);
                     floorNr++;
-                    yield return null;
+                    //yield return null;
                 }
                 foreach (XmlElement subroom in room.SelectNodes("subroom[@class='stair' or @class ='Stair'"
                                                               + "or @class='idle_escalator']"))
@@ -190,13 +200,68 @@ public class FileLoader : MonoBehaviour
                     }
 
 
-                    StairExtrudeGeometry.create(subroom.GetAttribute("class") + (" ") + stairNr, coordFirst, coordSecond, A_x, B_y, C_z, pxUp, pyUp, pxDown, pyDown);
+                    StairExtrudeGeometry.CreateMesh(subroom.GetAttribute("class") + (" ") + stairNr, coordFirst, coordSecond, A_x, B_y, C_z, pxUp, pyUp, pxDown, pyDown, ref meshesStairs);
                     stairNr++;
-                    yield return null;
+                    //yield return null;
                 }
             }
         }
+        CreateFloors(ref meshesFloor);
+        CreateWalls(ref meshesWallSide, ref meshesWallTop);
+        CreateStairs(ref meshesStairs);
+
         RecalculateSimulationTransform();
+    }
+
+    private GameObject CreateCombinedMeshObject(string name, ref List<Mesh> meshes, int layer, Material mat) {
+        Mesh combinedMesh = CombineMeshes(ref meshes);
+        GameObject obj = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
+        obj.transform.parent = simulationObjects.transform;
+        MeshFilter mesh_filter = obj.GetComponent<MeshFilter>();
+        mesh_filter.mesh = combinedMesh;
+        obj.GetComponent<Renderer>().material = mat;
+        obj.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        obj.layer = layer;
+        obj.transform.localPosition = new Vector3(0, 0, 0);
+        obj.transform.localScale = Vector3.one;
+        obj.transform.localRotation = Quaternion.Euler(0,0,0);
+        return obj;
+    }
+
+    private void CreateFloors(ref List<Mesh> meshesFloor) {
+        GameObject floors = CreateCombinedMeshObject("Floors", ref meshesFloor, 11, gl.theme.getFloorMaterial());
+        floors.AddComponent<MeshCollider>();
+        // teleportation area component setup
+        MiniatureTeleportationManager tpm = FindObjectOfType<MiniatureTeleportationManager>();
+        GeometryTeleportationArea tpArea = floors.AddComponent<GeometryTeleportationArea>();
+        tpArea.interactionLayerMask = 1 << LayerMask.NameToLayer("GeometryFloor"); // geometry floor
+        tpArea.teleportTrigger = BaseTeleportationInteractable.TeleportTrigger.OnSelectEnter;
+        tpArea.setTeleportationManager(tpm);
+    }
+
+    private void CreateWalls(ref List<Mesh> sides, ref List<Mesh> tops)
+    {
+        CreateCombinedMeshObject("WallSides", ref sides, 12, gl.theme.getWallsMaterialST());
+        CreateCombinedMeshObject("WallTops", ref tops, 12, gl.theme.getWallsMaterial());
+    }
+
+    private void CreateStairs(ref List<Mesh> stairs)
+    {
+        CreateCombinedMeshObject("Stairs", ref stairs, 12, gl.theme.getWallsMaterial());
+    }
+
+    private Mesh CombineMeshes(ref List<Mesh> meshes)
+    {
+        var combine = new CombineInstance[meshes.Count];
+        for (int i = 0; i < meshes.Count; i++)
+        {
+            combine[i].mesh = meshes[i];
+            combine[i].transform = Matrix4x4.identity;
+        }
+
+        var mesh = new Mesh();
+        mesh.CombineMeshes(combine, true);
+        return mesh;
     }
 
     static List<Vector2> parsePoints(XmlElement polyPoints)

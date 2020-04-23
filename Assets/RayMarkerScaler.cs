@@ -42,9 +42,13 @@ public class RayMarkerScaler : MonoBehaviour
 
     public void HandleHoverExit(XRBaseInteractable interactable)
     {
-        //if (marker && interactable.gameObject.layer == 11) // if it's hovering over floor geometry
-        //{
-        //    lastExitFrame = Time.frameCount;
-        //}
+        if (marker && (interactable == null) == false) // check if both required objects still exist
+        {
+            if (interactable.gameObject.layer == 11) // if it's hovering over floor geometry
+            {
+                marker.transform.localScale = Vector3.one;
+                lineVisual.lineWidth = defaultLineWidth;
+            }
+        }
     }
 }

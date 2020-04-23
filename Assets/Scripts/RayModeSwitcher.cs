@@ -5,6 +5,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 [RequireComponent(typeof(RayMarkerScaler))]
 public class RayModeSwitcher : MonoBehaviour
 {
+    public bool enableTeleport = true;
     private HandManager handManager;
     private List<GameObject> markers = new List<GameObject>();
 
@@ -43,8 +44,8 @@ public class RayModeSwitcher : MonoBehaviour
 
         if (buttonPressed)
         {
-            
-            toggleTeleportRay(true);
+            if(enableTeleport)
+                toggleTeleportRay(true);
         }
 
         if (buttonReleased)

@@ -22,5 +22,10 @@ public class ObstacleExtrudeGeometry : ExtrudeGeometry  {
 
 		ExtrudeGeometry.create (name, verticesList, height, zOffset, topMaterial, sideMaterial, 13);
 	}
+
+    public static void CreateMeshes(string name, List<Vector2> verticesList, float height, float zOffset, ref List<Mesh> sideMeshes, ref List<Mesh> topMeshes)
+    {
+        ExtrudeGeometry.CreateMeshes(name, verticesList, height, zOffset, 13, ref sideMeshes, ref topMeshes);
+    }
 }
 
