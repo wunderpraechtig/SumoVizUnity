@@ -2,13 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class Pedestrian : MonoBehaviour {
-	
-	Vector3 start;
-	Vector3 target;
-	float movement_time_total;
-	float movement_time_elapsed;
-	private float speed;
+public class Pedestrian : MonoBehaviour
+{
 	int densityReload;
 	int densityReloadInterval = 10;
     bool playingAnimation = false;
@@ -19,7 +14,7 @@ public class Pedestrian : MonoBehaviour {
     float timeEarliest = 0;
     float timeLatest = 0;
 	Color myColor;
-	bool trajectoryVisible;
+	//bool trajectoryVisible = false;
 
     Animation componentAnimation = null;
     AnimationState animationWalking = null;
@@ -63,51 +58,49 @@ public class Pedestrian : MonoBehaviour {
         }
     }
 
-	void OnMouseDown(){
-		if (!Cursor.visible && !trajectoryVisible && !pc.drawLine && hideFlags!=HideFlags.HideInHierarchy) {
-			showTrajectory();
-		} else if (!Cursor.visible && trajectoryVisible && !pc.drawLine && hideFlags!=HideFlags.HideInHierarchy) {
-			hideTrajectory();
-		}
-	}
+    //void OnMouseDown(){
+    //	if (!Cursor.visible && !trajectoryVisible && !pc.drawLine && hideFlags!=HideFlags.HideInHierarchy) {
+    //		showTrajectory();
+    //	} else if (!Cursor.visible && trajectoryVisible && !pc.drawLine && hideFlags!=HideFlags.HideInHierarchy) {
+    //		hideTrajectory();
+    //	}
+    //}
 
-	public void hideTrajectory() {
-        GameObject myLine = GameObject.Find(name + " trajectory");
-        Destroy(myLine);
-		trajectoryVisible = false;
-	}
+    //public void hideTrajectory()
+    //{
+    //    GameObject myLine = GameObject.Find(name + " trajectory");
+    //    Destroy(myLine);
+    //    trajectoryVisible = false;
+    //}
 
-    
-    public void showTrajectory()
-    {
-        throw new System.NotImplementedException();
-        /*
-        List<Vector3> points = new List<Vector3>();
-        for (int i = 0; i < positions.Count - 1; i++)
-        {
-            PedestrianPosition a = (PedestrianPosition)positions.GetByIndex(i);
-            points.Add(new Vector3(a.getX(), a.getZ() + 0.01f, a.getY()));
-        }
 
-        GameObject myLine = new GameObject(name + " trajectory");
-        myLine.transform.position = points[1];
-        myLine.AddComponent<LineRenderer>();
-        LineRenderer lr = myLine.GetComponent<LineRenderer>();
-        
-        lr.material = new Material((Material)Resources.Load("LineMaterial", typeof(Material)));
-        lr.material.SetColor("_EmissionColor", myColor);
-        lr.material.SetColor("_Color", myColor);
-        lr.startColor = myColor;
-        lr.endColor = myColor;        
-        lr.startWidth = 0.08f;
-        lr.endWidth = 0.08f;
-        lr.positionCount = points.Count;
-        lr.SetPositions(points.ToArray());
+    //public void showTrajectory()
+    //{
+    //    List<Vector3> points = new List<Vector3>();
+    //    for (int i = 0; i < positions.Count - 1; i++)
+    //    {
+    //        PedestrianPosition a = (PedestrianPosition)positions.GetByIndex(i);
+    //        points.Add(new Vector3(a.getX(), a.getZ() + 0.01f, a.getY()));
+    //    }
 
-        pc.trajectoriesShown = true;
-        trajectoryVisible = true;
-        */
-    }
+    //    GameObject myLine = new GameObject(name + " trajectory");
+    //    myLine.transform.position = points[1];
+    //    myLine.AddComponent<LineRenderer>();
+    //    LineRenderer lr = myLine.GetComponent<LineRenderer>();
+
+    //    lr.material = new Material((Material)Resources.Load("LineMaterial", typeof(Material)));
+    //    lr.material.SetColor("_EmissionColor", myColor);
+    //    lr.material.SetColor("_Color", myColor);
+    //    lr.startColor = myColor;
+    //    lr.endColor = myColor;
+    //    lr.startWidth = 0.08f;
+    //    lr.endWidth = 0.08f;
+    //    lr.positionCount = points.Count;
+    //    lr.SetPositions(points.ToArray());
+
+    //    pc.trajectoriesShown = true;
+    //    trajectoryVisible = true;
+    //}
 
 
 
@@ -138,8 +131,6 @@ public class Pedestrian : MonoBehaviour {
 		tile.transform.position = gameObject.transform.position;
 		tile.transform.parent = gameObject.transform;
         tile.transform.localScale = Vector3.one;
-
-
     }
     
 	void Update () {
@@ -166,18 +157,18 @@ public class Pedestrian : MonoBehaviour {
 			pedRenderer.enabled = true;
 			PedestrianPosition pos = positions[index];
 			PedestrianPosition pos2 = positions[index+1];
-			start = new Vector3 (pos.getX(), pos.getZ(), pos.getY());
-			target = new Vector3 (pos2.getX(), pos2.getZ(), pos2.getY());
+            Vector3 start = new Vector3 (pos.getX(), pos.getZ(), pos.getY());
+            Vector3 target = new Vector3 (pos2.getX(), pos2.getZ(), pos2.getY());
 
 			float movement_percentage = pc.current_time - pos.getTime();
 			Vector3 newPosition = Vector3.Lerp(start,target,movement_percentage);
 
             // to keep pedestrians upright change in the Z Axis is excluded from rotation calculation
             Vector3 relativePos = new Vector3(pos2.getX(), 0, pos2.getY()) - new Vector3(pos.getX(), 0, pos.getY());
-            speed = relativePos.magnitude;
+            float speed = relativePos.magnitude;
 
             if (componentAnimation != null)
-                animationWalking.speed = getSpeed ();
+                animationWalking.speed = speed*2;
             
 
             if (start!=target) transform.localRotation = Quaternion.LookRotation(relativePos);
@@ -196,10 +187,10 @@ public class Pedestrian : MonoBehaviour {
                 tileRenderer.enabled = true;
 
 				if (pc.tileColoringMode == TileColoringMode.TileColoringSpeed) {
-                    tileRenderer.material.color = ColorHelper.ColorForSpeed(getSpeed(), 1.5f);  //1.5 as average maximum walking speed when not hindered
+                    tileRenderer.material.color = ColorHelper.ColorForSpeed(speed*2, 1.5f);  //1.5 as average maximum walking speed when not hindered
 					//it.updateSpeed(speed);
 				} else if (pc.tileColoringMode == TileColoringMode.TileColoringDensity) {
-					densityReload = (densityReload+1)%densityReloadInterval;
+					densityReload = (densityReload+1)%densityReloadInterval; // ony recalc density every x frames
 					if (densityReload==0) {
 						getDensity();
 					}
@@ -240,29 +231,29 @@ public class Pedestrian : MonoBehaviour {
 		return density;
 	}
 
-	public float getDensityF() {
+	//public float getDensityF() {
 
-		if (hideFlags==HideFlags.HideInHierarchy) return -1;
-		List<float> nearbys = new List<float>();
-		foreach (Pedestrian p in pl.pedestrians) {
-			if (p!=this && p.hideFlags!=HideFlags.HideInHierarchy) {
-				float distance = Vector3.Distance(transform.position,p.transform.position);
-				if (nearbys.Count == 0) nearbys.Add(distance);
-				else if (nearbys[0]>distance) {nearbys.Insert(0,distance);}
-				else {nearbys.Add (distance);}
-			}
-		}
-		float density = 8/(nearbys[7]*nearbys[7]*Mathf.PI);
-		//it.updateDensity(density);
+	//	if (hideFlags==HideFlags.HideInHierarchy) return -1;
+	//	List<float> nearbys = new List<float>();
+	//	foreach (Pedestrian p in pl.pedestrians) {
+	//		if (p!=this && p.hideFlags!=HideFlags.HideInHierarchy) {
+	//			float distance = Vector3.Distance(transform.position,p.transform.position);
+	//			if (nearbys.Count == 0) nearbys.Add(distance);
+	//			else if (nearbys[0]>distance) {nearbys.Insert(0,distance);}
+	//			else {nearbys.Add (distance);}
+	//		}
+	//	}
+	//	float density = 8/(nearbys[7]*nearbys[7]*Mathf.PI);
+	//	it.updateDensity(density);
 
-		return density;
-	}
+	//	return density;
+	//}
 
 	
 
-	public float getSpeed() {
-		return speed*2;
-	}
+	//public float getSpeed() {
+	//	return speed*2;
+	//}
 
 	// http://www.stefanbader.ch/faster-line-segment-intersection-for-unity3dc/
 	bool FasterLineSegmentIntersection(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4) {
@@ -328,39 +319,6 @@ public class Pedestrian : MonoBehaviour {
             }
         }
         return -1;
-		
-		/*
-		// Check to see if we need to search the list.
-		if (thisList == null || thisList.Count <= 0) { return -1; }
-		if (thisList.Count == 1) { return 0; }
-		
-		// Setup the variables needed to find the closest index
-		int lower = 0;
-		int upper = thisList.Count - 1;
-		int index = (lower + upper) / 2;
-		
-		// Find the closest index (rounded down)
-		bool searching = true;
-		while (searching)
-		{
-			int comparisonResult = float.Compare(thisValue, (float) thisList.GetKey(index));
-			if (comparisonResult == 0) { return index; }
-			else if (comparisonResult < 0) { upper = index - 1; }
-			else { lower = index + 1; }
-			Debug.Log (thisValue + " : " + (float) thisList.GetKey(index));
-			index = (lower + upper) / 2;
-			if (lower > upper) { searching = false; }
-		}
-
-		// Check to see if we are under or over the max values.
-		if (index >= thisList.Count - 1) { return thisList.Count - 1; }
-		if (index < 0) { return 0; }
-		
-		// Check to see if we should have rounded up instead
-		//if (thisList.Keys[index + 1] - thisValue < thisValue - (thisList.Keys[index])) { index++; }
-		
-		// Return the correct/closest string
-		return index;*/
 	}
 
 	

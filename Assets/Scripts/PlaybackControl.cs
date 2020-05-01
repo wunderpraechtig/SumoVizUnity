@@ -62,14 +62,14 @@ public class PlaybackControl : MonoBehaviour
         {
             foreach (Pedestrian p in pl.pedestrians)
             {
-                p.showTrajectory();
+                //p.showTrajectory();
             }
         }
         else
         {
             foreach (Pedestrian p in pl.pedestrians)
             {
-                p.hideTrajectory();
+                //p.hideTrajectory();
             }
         }
     }

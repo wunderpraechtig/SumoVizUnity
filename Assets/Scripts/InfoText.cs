@@ -200,7 +200,7 @@ public class InfoText : MonoBehaviour {
 		foreach (Pedestrian ped in pl.pedestrians) {
 			Renderer r = ped.GetComponentInChildren<Renderer>() as Renderer;
 			if (r.enabled) {
-				float speed = ped.getSpeed();
+				float speed = 0;
 				float density = ped.getDensity();
 				maxSpeed = Mathf.Max(speed,maxSpeed);
 				maxDensity = Mathf.Max (density,maxDensity);

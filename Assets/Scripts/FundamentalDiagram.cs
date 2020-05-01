@@ -78,7 +78,7 @@ public class FundamentalDiagram : MonoBehaviour {
 		List<Vector2> points = new List<Vector2> ();
 		foreach (Pedestrian ped in pl.pedestrians) {
 			if (ped.hideFlags != HideFlags.HideInHierarchy) {
-				float speed = ped.getSpeed();
+				float speed = 0;
 				float density = ped.getDensity();
 				maxSpeed = Mathf.Max(speed,maxSpeed);
 				maxDensity = Mathf.Max (density,maxDensity);

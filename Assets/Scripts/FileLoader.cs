@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 using UnityEditor;
@@ -10,27 +11,27 @@ public class FileLoader : MonoBehaviour
 {
     [SerializeField] private GameObject miniatureNormalizer = null;
     [SerializeField] private GameObject simulationObjects = null;
-    private GeometryLoader gl;
+    [SerializeField] private PedestrianSystem pedestrianSystem = null;
+    [SerializeField] private GeometryLoader gl = null;
+    [SerializeField] private GameState gameState = null;
+
     private int simulationLayers = 0x3C00;
 
     void Start()
     {
-        simulationLayers = LayerMask.GetMask("Pedestrian", "GeometryFloor", "GeometryWalls", "GeometryObstacles");
-        gl = GameObject.Find("GeometryLoader").GetComponent<GeometryLoader>();
+        simulationLayers = LayerMask.GetMask("GeometryFloor", "GeometryWalls", "GeometryObstacles");
         gl.setTheme(new LabThemingMode());
-        //LoadWithEditorDialog();
+
+#if UNITY_EDITOR
+        var GeometryXML = EditorUtility.OpenFilePanel(
+            "Load Geometry", "", "xml");
+
+        var TrajectoryXML = EditorUtility.OpenFilePanel(
+            "Load Trajectory", "", "xml");
+
+        StartCoroutine(LoadSimulation(GeometryXML, TrajectoryXML));
+#endif
     }
-
-    //public void LoadWithEditorDialog()
-    //{
-    //    var GeometryXML = EditorUtility.OpenFilePanel(
-    //        "Load Geometry", "", "xml");
-
-    //    var TrajectoryXML = EditorUtility.OpenFilePanel(
-    //        "Load Trajectory", "", "xml");
-
-    //    StartCoroutine(LoadSimulation(GeometryXML, TrajectoryXML));
-    //}
 
     public IEnumerator LoadSimulation(string pathGeo, string pathTraj) {
 
@@ -45,6 +46,7 @@ public class FileLoader : MonoBehaviour
 
     public IEnumerator ClearCurrentSimulation()
     {
+        pedestrianSystem.ClearPedestrianEntities();
         List<GameObject> lastSimulation = new List<GameObject>();
         foreach (Transform child in simulationObjects.transform)
         {
@@ -328,6 +330,8 @@ public class FileLoader : MonoBehaviour
         return list;
     }
 
+
+
     IEnumerator loadPedestrianFile(string filename)
     {
         if (!System.IO.File.Exists(filename))
@@ -336,53 +340,75 @@ public class FileLoader : MonoBehaviour
             yield break;
         }
 
-        XmlDocument xmlDocTraj = new XmlDocument();
-        xmlDocTraj.LoadXml(System.IO.File.ReadAllText(filename));
-
-        PedestrianLoader pl = GameObject.Find("PedestrianLoader").GetComponent<PedestrianLoader>();
-
-        pl.Clear();
-
-        XmlNode trajectories = xmlDocTraj.SelectSingleNode("//trajectories");
-
-        int fps = 8, FrameID;  //8 is used as a default framerate. Actual value is read from xmlDocTraj
-
-        foreach (XmlElement header in trajectories.SelectNodes("header"))
+        List<PedestrianEntity> result = new List<PedestrianEntity>();
+        float totalTime = 0;
+        var thread = new Thread(() => 
         {
-
-            XDocument doc = XDocument.Load(filename);
-            var fpsInput = doc.Descendants("frameRate");
-
-            foreach (var fpsVal in fpsInput)
+            try
             {
-                if (float.Parse(fpsVal.Value) != 0)
-                    fps = (int)float.Parse(fpsVal.Value);
-            }
-        }
+                XmlDocument xmlDocTraj = new XmlDocument();
+                xmlDocTraj.LoadXml(System.IO.File.ReadAllText(filename));
 
-        foreach (XmlElement frame in trajectories.SelectNodes("frame"))
-        {
-            int.TryParse(frame.GetAttribute("ID"), out FrameID);
+                PedestrianAssembler assembler = new PedestrianAssembler();
 
-            if (FrameID % fps == 0)
-            {
-                foreach (XmlElement agent in frame)
+                XmlNode trajectories = xmlDocTraj.SelectSingleNode("//trajectories");
+
+                int fps = 8, FrameID;
+
+                foreach (XmlElement header in trajectories.SelectNodes("header"))
                 {
-                    float time;
-                    int id;
-                    float x;
-                    float y;
-                    float z;
-                    float.TryParse(frame.GetAttribute("ID"), out time);
-                    int.TryParse(agent.GetAttribute("ID"), out id);
-                    float.TryParse(agent.GetAttribute("x"), out x);
-                    float.TryParse(agent.GetAttribute("y"), out y);
-                    float.TryParse(agent.GetAttribute("z"), out z);
-                    pl.addPedestrianPosition(new PedestrianPosition(id, time / fps, x, y, z));
+
+                    XDocument doc = XDocument.Load(filename);
+                    var fpsInput = doc.Descendants("frameRate");
+
+                    foreach (var fpsVal in fpsInput)
+                    {
+                        if (float.Parse(fpsVal.Value) != 0)
+                            fps = (int)float.Parse(fpsVal.Value);
+                    }
                 }
+
+                foreach (XmlElement frame in trajectories.SelectNodes("frame"))
+                {
+                    int.TryParse(frame.GetAttribute("ID"), out FrameID);
+
+                    if (FrameID % fps == 0)
+                    {
+                        foreach (XmlElement agent in frame)
+                        {
+                            float time;
+                            int id;
+                            float x;
+                            float y;
+                            float z;
+                            float.TryParse(frame.GetAttribute("ID"), out time);
+                            int.TryParse(agent.GetAttribute("ID"), out id);
+                            float.TryParse(agent.GetAttribute("x"), out x);
+                            float.TryParse(agent.GetAttribute("y"), out y);
+                            float.TryParse(agent.GetAttribute("z"), out z);
+                            assembler.addPedestrianPosition(new PedestrianPosition(id, time / fps, x, y, z));
+                        }
+                    }
+                }
+                result = assembler.createPedestrians();
+                totalTime = assembler.internalTotalTime;
             }
+            catch (System.Exception e) {
+                Debug.Log(e.ToString());
+                throw e;
+            }
+        });
+        thread.Name = "PedestrianLoader";
+        thread.Start();
+        while (thread.IsAlive) {
+            yield return null;
         }
-        yield return pl.createPedestrians();
+        thread.Join();
+
+        gameState.TotalTime = totalTime;
+        foreach (var entity in result) {
+            pedestrianSystem.AddPedestrianEntity(entity);
+        }
     }
 
 
@@ -399,11 +425,8 @@ public class FileLoader : MonoBehaviour
                 {
                     PointSet.RemoveAt(j);
                 }
-
             }
         }
-
-
         ConvexAogrithm ca = new ConvexAogrithm(PointSet);
         Vector2 p;
         ca.GetNodesByAngle(out p);
@@ -415,10 +438,6 @@ public class FileLoader : MonoBehaviour
         {
             PointSet.Add(vlist[m]);
         }
-
-
         return PointSet;
-
     }
-
 }

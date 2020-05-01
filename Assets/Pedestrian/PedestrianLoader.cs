@@ -9,6 +9,7 @@ public class PedestrianLoader : MonoBehaviour {
     Dictionary<int, List<PedestrianPosition>> pedestrianPositions = new Dictionary<int, List<PedestrianPosition>>();
     PlaybackControl pc;
     GameObject parent;
+    [SerializeField] private PedestrianSystem pedestrianSystem = null;
     float internalTotalTime = 0.0f;
 
     public List<Pedestrian> pedestrians = new List<Pedestrian>();
@@ -46,18 +47,29 @@ public class PedestrianLoader : MonoBehaviour {
         if (position.getTime() > internalTotalTime) internalTotalTime = position.getTime();
     }
 
-    public IEnumerator createPedestrians() {
-        foreach (var pedestrianEntry in pedestrianPositions) {
-            GameObject pedestrian = (GameObject)Instantiate(Resources.Load(pedestrianPrefab));
-            pedestrian.transform.parent = parent.transform;
-            pedestrian.transform.localScale = Vector3.one;
-            pedestrian.transform.localRotation = Quaternion.Euler(0, 0, 0);
-            Pedestrian pedComponent = pedestrian.GetComponent<Pedestrian>();
-            pedComponent.setPositions(pedestrianEntry.Value);
-            pedComponent.setID(pedestrianEntry.Key);
-            pedestrians.Add(pedComponent);
-            yield return null;
+    //public IEnumerator createPedestrians() {
+    //    foreach (var pedestrianEntry in pedestrianPositions) {
+    //        GameObject pedestrian = (GameObject)Instantiate(Resources.Load(pedestrianPrefab));
+    //        pedestrian.transform.parent = parent.transform;
+    //        pedestrian.transform.localScale = Vector3.one;
+    //        pedestrian.transform.localRotation = Quaternion.Euler(0, 0, 0);
+    //        Pedestrian pedComponent = pedestrian.GetComponent<Pedestrian>();
+    //        pedComponent.setPositions(pedestrianEntry.Value);
+    //        pedComponent.setID(pedestrianEntry.Key);
+    //        pedestrians.Add(pedComponent);
+    //        yield return null;
+    //    }
+    //    pc.total_time = internalTotalTime;
+    //}
+
+    public IEnumerator createPedestrians()
+    {
+        foreach (var pedestrianEntry in pedestrianPositions)
+        {
+            PedestrianEntity entity = new PedestrianEntity(pedestrianEntry.Key, pedestrianEntry.Value);
+            pedestrianSystem.AddPedestrianEntity(entity);
         }
+        yield return null;
         pc.total_time = internalTotalTime;
     }
 }
