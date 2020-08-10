@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.XR;
 
 public class MainMenuToggle : MonoBehaviour
 {
@@ -11,7 +10,7 @@ public class MainMenuToggle : MonoBehaviour
     }
 
     private void Update() {
-        if (handManager.buttonLeftPrimary.isPressed())
+        if (handManager.Left.buttonPrimary.isPressed())
         {
             mainMenuLogic.ToggleMainMenu();
         }

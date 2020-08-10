@@ -11,13 +11,13 @@ public class MiniatureViewControl : MonoBehaviour
     private HandManager handManager = null;
     public bool IsHeightLocked { get; set; } = true;
 
-    [SerializeField] private Transform leftHandAnchor = null;
-    [SerializeField] private Transform rightHandAnchor = null;
-    [SerializeField] private Transform miniatureScaleRotate = null;
-    [SerializeField] private Transform miniatureMove = null;
+    [SerializeField] private Transform leftController = null;
+    [SerializeField] private Transform rightController = null;
+    [SerializeField] private Transform miniatureRotate = null;
+    [SerializeField] private Transform miniatureMoveScale = null;
     [SerializeField] private Transform miniaturePedestal = null;
-    [SerializeField] private bool grabbingLeftHand = false;
-    [SerializeField] private bool grabbingRightHand = false;
+    [SerializeField] private bool isGrabbingLeft = false;
+    [SerializeField] private bool isGrabbingRight = false;
     [SerializeField] private float grabThreshold = 0.9f;
 
     [SerializeField] private Vector3 grabPointMove;
@@ -35,92 +35,94 @@ public class MiniatureViewControl : MonoBehaviour
     [SerializeField] private Vector3 rotInitialVec;
     [SerializeField] private Vector3 rotNewVec;
 
-    private void Awake() {
+    private void Awake()
+    {
         handManager = FindObjectOfType<HandManager>();
     }
 
     void Update()
     {
-        if (handManager.axisLeftGrip.getState(grabThreshold))
+        if (handManager.Left.axisGrip.getState(grabThreshold))
         {
-            if (!grabbingLeftHand) // when not already grabbing
-            {
-                if (grabbingRightHand)
+            if (!isGrabbingLeft)
+            { // when not already grabbing
+                if (isGrabbingRight)
                 {
-                    grabPointScaleA = leftHandAnchor.localPosition;
-                    grabPointScaleB = rightHandAnchor.localPosition;
+                    grabPointScaleA = leftController.localPosition;
+                    grabPointScaleB = rightController.localPosition;
                 }
                 if (functionLeft == HandFunction.Move)
                 {
-                    grabPointMove = leftHandAnchor.localPosition;
-                    grabPointRotateGlobal = rightHandAnchor.position;
+                    grabPointMove = leftController.localPosition;
+                    grabPointRotateGlobal = rightController.position;
                 }
                 else
                 {
-                    grabPointMove = rightHandAnchor.localPosition;
-                    grabPointRotateGlobal = leftHandAnchor.position;
+                    grabPointMove = rightController.localPosition;
+                    grabPointRotateGlobal = leftController.position;
                 }
-                saveMiniaturePosition();
-                grabbingLeftHand = true;
+                saveMiniatureTransforms();
+                isGrabbingLeft = true;
             }
-        }
-        else
-        {
-            if (grabbingLeftHand && grabbingRightHand)
-            {
-                if (functionLeft == HandFunction.Move)
-                {
-                    grabPointMove = leftHandAnchor.localPosition;
-                    grabPointRotateGlobal = rightHandAnchor.position;
-                }
-                else
-                {
-                    grabPointMove = rightHandAnchor.localPosition;
-                    grabPointRotateGlobal = leftHandAnchor.position;
-                }
-            }
-            grabbingLeftHand = false;
         }
 
-        if (handManager.axisRightGrip.getState(grabThreshold))
+        else
         {
-            if (!grabbingRightHand) // when not already grabbing
+            if (isGrabbingLeft && isGrabbingRight)
             {
-                if (grabbingLeftHand)
+                if (functionLeft == HandFunction.Move)
                 {
-                    grabPointScaleA = leftHandAnchor.localPosition;
-                    grabPointScaleB = rightHandAnchor.localPosition;
-                }
-                if (functionRight == HandFunction.Move)
-                {
-                    grabPointMove = rightHandAnchor.localPosition;
-                    grabPointRotateGlobal = leftHandAnchor.position;
+                    grabPointMove = leftController.localPosition;
+                    grabPointRotateGlobal = rightController.position;
                 }
                 else
                 {
-                    grabPointMove = leftHandAnchor.localPosition;
-                    grabPointRotateGlobal = rightHandAnchor.position;
+                    grabPointMove = rightController.localPosition;
+                    grabPointRotateGlobal = leftController.position;
                 }
-                saveMiniaturePosition();
-                grabbingRightHand = true;
+            }
+            isGrabbingLeft = false;
+        }
+
+        if (handManager.Right.axisGrip.getState(grabThreshold))
+        {
+            if (!isGrabbingRight)
+            { // when not already grabbing
+                if (isGrabbingLeft)
+                {
+                    grabPointScaleA = leftController.localPosition;
+                    grabPointScaleB = rightController.localPosition;
+                }
+                if (functionRight == HandFunction.Move)
+                {
+                    grabPointMove = rightController.localPosition;
+                    grabPointRotateGlobal = leftController.position;
+                }
+                else
+                {
+                    grabPointMove = leftController.localPosition;
+                    grabPointRotateGlobal = rightController.position;
+                }
+                saveMiniatureTransforms();
+                isGrabbingRight = true;
             }
         }
         else
         {
-            if (grabbingLeftHand && grabbingRightHand)
+            if (isGrabbingLeft && isGrabbingRight)
             {
                 if (functionRight == HandFunction.Move)
                 {
-                    grabPointMove = rightHandAnchor.localPosition;
-                    grabPointRotateGlobal = leftHandAnchor.position;
+                    grabPointMove = rightController.localPosition;
+                    grabPointRotateGlobal = leftController.position;
                 }
                 else
                 {
-                    grabPointMove = leftHandAnchor.localPosition;
-                    grabPointRotateGlobal = rightHandAnchor.position;
+                    grabPointMove = leftController.localPosition;
+                    grabPointRotateGlobal = rightController.position;
                 }
             }
-            grabbingRightHand = false;
+            isGrabbingRight = false;
         }
         HandleInputs();
     }
@@ -128,18 +130,19 @@ public class MiniatureViewControl : MonoBehaviour
     private void HandleInputs()
     {
         // Case rotation or move
-        if (grabbingLeftHand != grabbingRightHand) {
+        if (isGrabbingLeft != isGrabbingRight)
+        {
             HandFunction currentFunction;
             Transform currentHandAnchor;
-            if (grabbingLeftHand)
+            if (isGrabbingLeft)
             {
                 currentFunction = functionLeft;
-                currentHandAnchor = leftHandAnchor;
+                currentHandAnchor = leftController;
             }
             else
             {
                 currentFunction = functionRight;
-                currentHandAnchor = rightHandAnchor;
+                currentHandAnchor = rightController;
             }
 
             if (currentFunction == HandFunction.Move)
@@ -147,10 +150,10 @@ public class MiniatureViewControl : MonoBehaviour
                 Vector3 diff = (currentHandAnchor.localPosition - grabPointMove);
                 float heightDiff = diff.y;
                 diff.y = 0;
-                diff = diff * (1/miniatureScaleRotate.localScale.x);
-                miniatureMove.localPosition = Quaternion.Inverse(miniatureScaleRotate.rotation) * (savedMiniaturePos + diff);
+                miniatureMoveScale.localPosition = Quaternion.Inverse(miniatureRotate.rotation) * (savedMiniaturePos + diff);
 
-                if (!IsHeightLocked) {
+                if (!IsHeightLocked)
+                {
                     Vector3 pedestalPos = savedPedestalPos;
                     pedestalPos.y += heightDiff;
                     miniaturePedestal.localPosition = pedestalPos;
@@ -158,30 +161,32 @@ public class MiniatureViewControl : MonoBehaviour
             }
             else
             {
-                rotInitialVec = grabPointRotateGlobal - miniatureScaleRotate.position;
-                rotNewVec = currentHandAnchor.position - miniatureScaleRotate.position;
+                rotInitialVec = grabPointRotateGlobal - miniaturePedestal.position;
+                rotNewVec = currentHandAnchor.position - miniaturePedestal.position;
                 rotInitialVec.y = 0;
                 rotNewVec.y = 0;
                 rotAngle = Vector3.SignedAngle(rotInitialVec, rotNewVec, Vector3.up);
-                miniatureScaleRotate.localRotation = savedMiniatureRot * Quaternion.Euler(Vector3.up * rotAngle);
+                miniatureRotate.localRotation = savedMiniatureRot * Quaternion.Euler(Vector3.up * rotAngle);
             }
 
         }
 
-        // Case zooming
-        if (grabbingLeftHand && grabbingRightHand) {
+        // Case scaling
+        if (isGrabbingLeft && isGrabbingRight)
+        {
             float initialDistance = Vector3.Distance(grabPointScaleA, grabPointScaleB);
-            float newDistance = Vector3.Distance(leftHandAnchor.localPosition, rightHandAnchor.localPosition);
+            float newDistance = Vector3.Distance(leftController.localPosition, rightController.localPosition);
             Vector3 newScale = savedMiniatureScale * (newDistance / initialDistance);
-            miniatureScaleRotate.localScale = newScale;
+            miniatureMoveScale.localScale = newScale;
         }
     }
 
-    void saveMiniaturePosition() {
-        savedMiniaturePosGlobal = miniatureMove.position;
-        savedMiniaturePos = miniatureScaleRotate.localRotation * miniatureMove.localPosition;
+    void saveMiniatureTransforms()
+    {
+        savedMiniaturePosGlobal = miniatureMoveScale.position;
+        savedMiniaturePos = miniatureRotate.localRotation * miniatureMoveScale.localPosition;
         savedPedestalPos = miniaturePedestal.localPosition;
-        savedMiniatureRot = miniatureScaleRotate.localRotation;
-        savedMiniatureScale = miniatureScaleRotate.localScale;
+        savedMiniatureRot = miniatureRotate.localRotation;
+        savedMiniatureScale = miniatureMoveScale.localScale;
     }
 }

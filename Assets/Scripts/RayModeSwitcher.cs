@@ -33,13 +33,13 @@ public class RayModeSwitcher : MonoBehaviour
         bool buttonReleased = false;
         if (hand == Hand.Left)
         {
-            buttonPressed = handManager.axisLeftPrimary2DTouch.isPressed();
-            buttonReleased = handManager.axisLeftPrimary2DTouch.isReleased();
+            buttonPressed = handManager.Left.axisPrimary2DTouch.isPressed();
+            buttonReleased = handManager.Left.axisPrimary2DTouch.isReleased();
         }
         else
         {
-            buttonPressed = handManager.axisRightPrimary2DTouch.isPressed();
-            buttonReleased = handManager.axisRightPrimary2DTouch.isReleased();
+            buttonPressed = handManager.Right.axisPrimary2DTouch.isPressed();
+            buttonReleased = handManager.Right.axisPrimary2DTouch.isReleased();
         }
 
         if (buttonPressed)

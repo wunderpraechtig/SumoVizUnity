@@ -20,32 +20,31 @@ public class Groundplane : MonoBehaviour {
 	public float avgFlow = 0.0f;
 
     void OnMouseDown(){
-	
-		PlaybackControl pc = GameObject.Find ("PlaybackControl").GetComponent<PlaybackControl> ();
+		//PlaybackControl pc = GameObject.Find ("PlaybackControl").GetComponent<PlaybackControl> ();
 
-		if (pc.drawLine) {
+		//if (pc.drawLine) {
 
-			RaycastHit hit;
-			Ray ray = GameObject.Find("Flycam").GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
-			if (GetComponent<Collider>().Raycast (ray, out hit, Mathf.Infinity)) {
+		//	RaycastHit hit;
+		//	Ray ray = GameObject.Find("Flycam").GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
+		//	if (GetComponent<Collider>().Raycast (ray, out hit, Mathf.Infinity)) {
 
-				if (!point1active) {
-					point1 = hit.point;
-					point1active = true;
-				} else if (!point2active)  {
-					point2 = hit.point;
-					VectorLine.SetCamera (GameObject.Find ("Flycam").GetComponent<Camera>());
-					myLine = VectorLine.SetLine3D (Color.red, new Vector3[] {point1, point2});
-					myLine.lineWidth = 3.0f;
-					point2active = true;
-					lineCrossed = 0;
-					pc.lineDrawn();
-				} else {
-					removeLine();
-				}
+		//		if (!point1active) {
+		//			point1 = hit.point;
+		//			point1active = true;
+		//		} else if (!point2active)  {
+		//			point2 = hit.point;
+		//			VectorLine.SetCamera (GameObject.Find ("Flycam").GetComponent<Camera>());
+		//			myLine = VectorLine.SetLine3D (Color.red, new Vector3[] {point1, point2});
+		//			myLine.lineWidth = 3.0f;
+		//			point2active = true;
+		//			lineCrossed = 0;
+		//			pc.lineDrawn();
+		//		} else {
+		//			removeLine();
+		//		}
 
-			}
-		}
+		//	}
+		//}
 	}
 
 	public void lineCross(float speed) {

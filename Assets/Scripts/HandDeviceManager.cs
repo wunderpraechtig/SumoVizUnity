@@ -64,23 +64,18 @@ public class HandDeviceManager : MonoBehaviour
         }
     }
 
-
     public List<InputDevice> leftHandDevices = new List<InputDevice>();
     public List<InputDevice> rightHandDevices = new List<InputDevice>();
-    private InputDeviceCharacteristics leftControllerCharacteristics =
-        UnityEngine.XR.InputDeviceCharacteristics.HeldInHand | UnityEngine.XR.InputDeviceCharacteristics.Left | UnityEngine.XR.InputDeviceCharacteristics.Controller;
-    private InputDeviceCharacteristics rightControllerCharacteristics =
-    UnityEngine.XR.InputDeviceCharacteristics.HeldInHand | UnityEngine.XR.InputDeviceCharacteristics.Right | UnityEngine.XR.InputDeviceCharacteristics.Controller;
-
-
+    
     void FixedUpdate()
     {
-        InputDevices.GetDevicesWithCharacteristics(leftControllerCharacteristics, leftHandDevices);
-        InputDevices.GetDevicesWithCharacteristics(rightControllerCharacteristics, rightHandDevices);
+        InputDevices.GetDevicesAtXRNode(XRNode.LeftHand, leftHandDevices);
+        InputDevices.GetDevicesAtXRNode(XRNode.RightHand, rightHandDevices);
     }
 
-    public void updateButtonFeature(List<InputDevice> devices, InputFeatureUsage<bool> feature, ref ManagedButton button)
+    public void updateButtonFeature(bool left, InputFeatureUsage<bool> feature, ref ManagedButton button)
     {
+        List<InputDevice> devices = left ? leftHandDevices : rightHandDevices;
         bool state = false;
         bool tempState = false;
         foreach (var device in devices)
@@ -92,8 +87,9 @@ public class HandDeviceManager : MonoBehaviour
         button.setCurrentState(state);
     }
 
-    public void updateAxis1DFeature(List<InputDevice> devices, InputFeatureUsage<float> feature, ref ManagedAxis1D axis)
+    public void updateAxis1DFeature(bool left, InputFeatureUsage<float> feature, ref ManagedAxis1D axis)
     {
+        List<InputDevice> devices = left ? leftHandDevices : rightHandDevices;
         float state = 0.0f;
         float tempState = 0.0f;
         foreach (var device in devices)
@@ -105,8 +101,9 @@ public class HandDeviceManager : MonoBehaviour
         axis.setValue(state);
     }
 
-    public void updateAxis2DFeature(List<InputDevice> devices, InputFeatureUsage<Vector2> feature, ref ManagedAxis2D axis)
+    public void updateAxis2DFeature(bool left, InputFeatureUsage<Vector2> feature, ref ManagedAxis2D axis)
     {
+        List<InputDevice> devices = left ? leftHandDevices : rightHandDevices;
         Vector2 state = Vector2.zero;
         Vector2 tempState = Vector2.zero;
         foreach (var device in devices)

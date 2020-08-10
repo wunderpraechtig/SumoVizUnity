@@ -20,8 +20,6 @@ public class GameState : MonoBehaviour
     public event Action<bool> trajectoryModeEvent;
     public event Action<float> densityThresholdEvent;
 
-
-
     private void Start()
     {
         isPlayingEvent.Invoke(isPlaying);
@@ -42,7 +40,6 @@ public class GameState : MonoBehaviour
             if (value != isPlaying)
             {
                 isPlaying = value;
-                //isPlayingEvent.Invoke(value);
                 isPlayingEvent.Invoke(value);
             }
         }
