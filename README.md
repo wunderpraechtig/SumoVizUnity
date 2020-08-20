@@ -2,9 +2,9 @@
 
 3D visualization of trajectories and geometries of crowd simulation software in virtual reality (Optimized for `JuPedSim` and 3D Geometries)
 
-![alt text](https://raw.githubusercontent.com/FabianPlum/SumoVizUnity/master/Example_1.png "Preview of SumoVizUnity JPS")
+![alt text](https://raw.githubusercontent.com/nachtmarv/SumoVizUnity/master/image_miniature_.jpg "Miniature View of a JPS dataset")
 
-![alt text](https://raw.githubusercontent.com/FabianPlum/SumoVizUnity/master/Example_2.JPG "Multilayer geometries supported")
+![alt text](https://raw.githubusercontent.com/nachtmarv/SumoVizUnity/master/image_realsize.jpg "Standing in the middle of the simulation")
 
 
 ## License
