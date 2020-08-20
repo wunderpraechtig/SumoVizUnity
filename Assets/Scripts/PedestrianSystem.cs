@@ -14,10 +14,12 @@ public class PedestrianSystem : MonoBehaviour
     List<PedestrianEntity> pedestrianEntities = new List<PedestrianEntity>();
     [SerializeField] GameState gameState = null;
     List<Material> ColorStorage = new List<Material>();
+    List<GameObject> trajectories = new List<GameObject>();
 
     private void Awake()
     {
         gameState.isPlayingEvent += OnIsPlayingChanged;
+        gameState.trajectoryModeEvent += OnShowTrajectoriesChanged;
 
         for (int i = 0; i < initialPoolSize; ++i) {
             CreatePoolObject();
@@ -61,6 +63,18 @@ public class PedestrianSystem : MonoBehaviour
     
     private void Update()
     {
+        if (gameState.IsPlaying)
+        {
+            try
+            {
+                gameState.CurrentTime = (gameState.CurrentTime + (float)Time.deltaTime) % gameState.TotalTime;
+            }
+            catch (DivideByZeroException)
+            {
+                gameState.CurrentTime = 0;
+            }
+        }
+
         float currentTime = gameState.CurrentTime;
         TileColoringMode tileColoringMode = gameState.PawnColoringMode;
         bool recalculateDensity = (Time.frameCount % densityRecalculationFrequency == 0);
@@ -133,6 +147,7 @@ public class PedestrianSystem : MonoBehaviour
                 poolObject.pedestrianRenderer.enabled = false;
                 poolObject.tileRenderer.enabled = false;
             }
+            entity.poolObject.trajectoryRenderer.widthMultiplier = entity.poolObject.obj.transform.lossyScale.x;
         }
     }
 
@@ -159,7 +174,31 @@ public class PedestrianSystem : MonoBehaviour
         gameObject.transform.parent = pedestrianParentObject.transform;
         gameObject.SetActive(false);
         PedestrianPoolObject poolObject = new PedestrianPoolObject(gameObject
-            , new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value));
+            , new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value), 
+            pedestrianParentObject.transform);
         pedestrianPool.AddLast(poolObject);
+    }
+
+    private void OnShowTrajectoriesChanged(bool show)
+    {
+        if (show)
+            foreach (var entry in pedestrianEntities)
+            {
+                List<Vector3> points = new List<Vector3>();
+                
+                for (int i = 0; i < entry.positions.Count - 1; i++)
+                {
+                    PedestrianPosition a = (PedestrianPosition)entry.positions[i];
+                    points.Add(new Vector3(a.getX(), a.getZ() + 0.01f, a.getY()));
+                }
+                entry.poolObject.trajectoryRenderer.positionCount = points.Count;
+                entry.poolObject.trajectoryRenderer.SetPositions(points.ToArray());
+                entry.poolObject.trajectoryRenderer.enabled = true;
+            }
+        else
+            foreach (var entry in pedestrianEntities)
+            {
+                entry.poolObject.trajectoryRenderer.enabled = false;
+            }
     }
 }

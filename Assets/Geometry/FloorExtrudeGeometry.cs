@@ -97,16 +97,20 @@ public class FloorExtrudeGeometry : Geometry
 
         // Create the Vector3 vertices
         Vector3[] vertices = new Vector3[vertices2D.Length];
+        Vector3[] normals = new Vector3[vertices2D.Length];
         for (int i = 0; i < vertices.Length; i++)
         {
             vertices[i] = new Vector3(vertices2D[i].x, zOffset - 0.0001f, vertices2D[i].y);
+            normals[i] = Vector3.up;
         }
 
         // Create the mesh
-        mesh = TangentHelper.TangentSolver(mesh);
+        //mesh = TangentHelper.TangentSolver(mesh);
         mesh.vertices = vertices;
         mesh.triangles = indices;
+        mesh.normals = normals;
         //mesh.RecalculateNormals();
+        
         mesh.RecalculateBounds();
 
         floorMeshes.Add(mesh);

@@ -152,8 +152,8 @@ public class FileLoader : MonoBehaviour
                     List<Vector2> floorVertices = parsePoints_floor(subroom);
                     //FloorExtrudeGeometry.create("floor " + floorNr, floorVertices, zOffset);
                     FloorExtrudeGeometry.CreateMesh("floor " + floorNr, floorVertices, zOffset, ref meshesFloor);
-                    floorVertices.Reverse();
-                    FloorExtrudeGeometry.CreateMesh("floor_r " + floorNr, floorVertices, zOffset, ref meshesFloor);
+                    //floorVertices.Reverse();
+                    //FloorExtrudeGeometry.CreateMesh("floor_r " + floorNr, floorVertices, zOffset, ref meshesFloor);
                     floorNr++;
                     //yield return null;
                 }

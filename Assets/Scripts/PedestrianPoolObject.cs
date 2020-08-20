@@ -7,10 +7,11 @@ public class PedestrianPoolObject
     public Animation componentAnimation;
     public AnimationState animationWalking;
     public GameObject tileObject;
+    public LineRenderer trajectoryRenderer;
     public Renderer tileRenderer;
     public Color color;
 
-    public PedestrianPoolObject(GameObject _obj, Color _color) {
+    public PedestrianPoolObject(GameObject _obj, Color _color, Transform parent) {
         obj = _obj;
         pedestrianRenderer = obj.GetComponentInChildren<Renderer>();
         componentAnimation = obj.GetComponent<Animation>();
@@ -51,5 +52,24 @@ public class PedestrianPoolObject
         tileObject.transform.position = obj.transform.position;
         tileObject.transform.parent = obj.transform;
         tileObject.transform.localScale = Vector3.one;
+
+        // Create trajectory line gameobject
+        GameObject lineObj = new GameObject("trajectory");
+        lineObj.transform.parent = parent;
+        lineObj.transform.localPosition = Vector3.zero;
+        lineObj.transform.localRotation = Quaternion.identity;
+        lineObj.transform.localScale = Vector3.one;
+        lineObj.AddComponent<LineRenderer>();
+        trajectoryRenderer = lineObj.GetComponent<LineRenderer>();
+
+        trajectoryRenderer.material = new Material((Material)Resources.Load("LineMaterial", typeof(Material)));
+        trajectoryRenderer.material.SetColor("_EmissionColor", color);
+        trajectoryRenderer.material.SetColor("_Color", color);
+        trajectoryRenderer.startColor = color;
+        trajectoryRenderer.endColor = color;
+        trajectoryRenderer.startWidth = 0.08f;
+        trajectoryRenderer.endWidth = 0.08f;
+        trajectoryRenderer.positionCount = 0;
+        trajectoryRenderer.useWorldSpace = false;
     }
 }
