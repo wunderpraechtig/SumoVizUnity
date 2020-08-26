@@ -18,7 +18,7 @@ The software is licensed under the [MIT License](LICENSE.txt):
 ### Required attribution
 > Copyright (c) 2014 Daniel Büchele
 
-> additions by Fabian Plum (2017)
+> additions by Fabian Plum and Mohcine Chraibi (2017)
 
 
 ### Restrictions
