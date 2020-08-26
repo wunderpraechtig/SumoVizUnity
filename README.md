@@ -16,10 +16,9 @@ The software is licensed under the [MIT License](LICENSE.txt):
 *source: [choosealicense.com](http://www.choosealicense.com/)*
 
 ### Required attribution
-
-> conversion to VR by Marvin Weisbrod (2020)
-> additions by Fabian Plum (2017)
 > Copyright (c) 2014 Daniel Büchele
+
+> additions by Fabian Plum (2017)
 
 
 ### Restrictions
