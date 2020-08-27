@@ -10,7 +10,7 @@ public class MainMenuToggle : MonoBehaviour
     }
 
     private void Update() {
-        if (handManager.Left.buttonPrimary.isPressed())
+        if (handManager.Left.buttonPrimary.isPressed() || handManager.Right.buttonPrimary.isPressed())
         {
             mainMenuLogic.ToggleMainMenu();
         }
