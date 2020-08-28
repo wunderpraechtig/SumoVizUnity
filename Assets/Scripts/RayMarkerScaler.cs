@@ -9,7 +9,7 @@ public class RayMarkerScaler : MonoBehaviour
 {
     private GameObject marker;
     private XRInteractorLineVisual lineVisual;
-    public float minimumScale = 0.0f;
+    public float minimumScale = 0.01f;
     public float maximumScale = 1.0f;
     private float defaultLineWidth = 0.01f;
 
@@ -26,29 +26,20 @@ public class RayMarkerScaler : MonoBehaviour
     }
 
     public void HandleHoverEnter(XRBaseInteractable interactable) {
-        if (marker && interactable.gameObject.layer == 11) // if it's hovering over floor geometry
-        {
-            Vector3 scale = interactable.transform.lossyScale;
-            float max = scale.x;
-            if (max < scale.y) max = scale.y;
-            if (max < scale.z) max = scale.z;
-            if (max < Mathf.Abs(minimumScale)) max = minimumScale;
-            if (max > Mathf.Abs(maximumScale)) max = maximumScale;
-            scale = new Vector3(max, max, max);
-            marker.transform.localScale = scale;
-            lineVisual.lineWidth = defaultLineWidth * max;
+        // check for geometry layer
+        if (marker && interactable && interactable.gameObject.layer == 11) {
+            float scale = interactable.transform.lossyScale.x;
+            scale = Mathf.Clamp(scale, minimumScale, maximumScale);
+            marker.transform.localScale = new Vector3(scale, scale, scale);
+            lineVisual.lineWidth = defaultLineWidth * scale;
         }
     }
 
-    public void HandleHoverExit(XRBaseInteractable interactable)
-    {
-        if (marker && (interactable == null) == false) // check if both required objects still exist
-        {
-            if (interactable.gameObject.layer == 11) // if it's hovering over floor geometry
-            {
-                marker.transform.localScale = Vector3.one;
-                lineVisual.lineWidth = defaultLineWidth;
-            }
+    public void HandleHoverExit(XRBaseInteractable interactable){
+        // check for geometry layer
+        if (marker && interactable && interactable.gameObject.layer == 11) {
+            marker.transform.localScale = Vector3.one;
+            lineVisual.lineWidth = defaultLineWidth;
         }
     }
 }

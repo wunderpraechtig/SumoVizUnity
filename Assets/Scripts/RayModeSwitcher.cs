@@ -29,29 +29,16 @@ public class RayModeSwitcher : MonoBehaviour
 
     private void Update()
     {
-        bool buttonPressed = false;
-        bool buttonReleased = false;
-        if (hand == Hand.Left)
-        {
-            buttonPressed = handManager.Left.axisPrimary2DTouch.isPressed();
-            buttonReleased = handManager.Left.axisPrimary2DTouch.isReleased();
-        }
-        else
-        {
-            buttonPressed = handManager.Right.axisPrimary2DTouch.isPressed();
-            buttonReleased = handManager.Right.axisPrimary2DTouch.isReleased();
-        }
-
-        if (buttonPressed)
-        {
-            if(enableTeleport)
+        if(hand == Hand.Left 
+            ? handManager.Left.axisPrimary2DTouch.isPressed() 
+            : handManager.Right.axisPrimary2DTouch.isPressed())
+            if (enableTeleport)
                 toggleTeleportRay(true);
-        }
 
-        if (buttonReleased)
-        {
+        if(hand == Hand.Left 
+            ? handManager.Left.axisPrimary2DTouch.isReleased() 
+            : handManager.Right.axisPrimary2DTouch.isReleased())
             toggleTeleportRay(false);
-        }
     }
 
     private void toggleTeleportRay(bool enable)
@@ -61,7 +48,7 @@ public class RayModeSwitcher : MonoBehaviour
         if (!enable)
         {
             teleportMarker.transform.localPosition = new Vector3(0, -1, 0);
-            markerScaler.ResetMarker();
+            //markerScaler.ResetMarker();
         }
         defaultLineVisual.enabled = !enable;
         teleportLineVisual.enabled = enable;
