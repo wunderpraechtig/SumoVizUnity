@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using Vectrosity;
-using UnityEngine.XR.Interaction.Toolkit;
 
 public class Groundplane : MonoBehaviour {
 

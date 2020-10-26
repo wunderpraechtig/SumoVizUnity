@@ -5,7 +5,6 @@ using System.Xml;
 using System.Xml.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
 
 public class FileLoader : MonoBehaviour
 {
@@ -233,12 +232,6 @@ public class FileLoader : MonoBehaviour
     private void CreateFloors(ref List<Mesh> meshesFloor) {
         GameObject floors = CreateCombinedMeshObject("Floors", ref meshesFloor, 11, gl.theme.getFloorMaterial());
         floors.AddComponent<MeshCollider>();
-        // teleportation area component setup
-        MiniatureTeleportationManager tpm = FindObjectOfType<MiniatureTeleportationManager>();
-        GeometryTeleportationArea tpArea = floors.AddComponent<GeometryTeleportationArea>();
-        tpArea.interactionLayerMask = 1 << LayerMask.NameToLayer("GeometryFloor"); // geometry floor
-        tpArea.teleportTrigger = BaseTeleportationInteractable.TeleportTrigger.OnSelectEnter;
-        tpArea.setTeleportationManager(tpm);
     }
 
     private void CreateWalls(ref List<Mesh> sides, ref List<Mesh> tops)

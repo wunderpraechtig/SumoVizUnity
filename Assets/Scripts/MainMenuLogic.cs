@@ -12,40 +12,40 @@ public class MainMenuLogic : MonoBehaviour
     public Button buttonLoadSimulation;
     private FileLoader fileLoader = null;
     private bool filebrowserOpen = false;
-    [SerializeField] private FileBrowser fileBrowser = null;
+    //[SerializeField] private FileBrowser fileBrowser = null;
 
     private void Awake()
     {
         fileLoader = FindObjectOfType<FileLoader>();
-        FileBrowser.setInstance(fileBrowser);
+        //FileBrowser.setInstance(fileBrowser);
     }
 
     private void Start()
     {
 
-        SetupFileBrowser();
+        //SetupFileBrowser();
 
         gameObject.SetActive(false);
         ResetMenus();
     }
 
-    private void SetupFileBrowser() {
-        fileBrowser.gameObject.SetActive(true);
-        // Set filters (optional)
-        // It is sufficient to set the filters just once (instead of each time before showing the file browser dialog), 
-        // if all the dialogs will be using the same filters
-        FileBrowser.SetFilters(true, new FileBrowser.Filter("Xml Files", ".xml"));
+    //private void SetupFileBrowser() {
+    //    fileBrowser.gameObject.SetActive(true);
+    //    // Set filters (optional)
+    //    // It is sufficient to set the filters just once (instead of each time before showing the file browser dialog), 
+    //    // if all the dialogs will be using the same filters
+    //    FileBrowser.SetFilters(true, new FileBrowser.Filter("Xml Files", ".xml"));
 
-        // Set default filter that is selected when the dialog is shown (optional)
-        // Returns true if the default filter is set successfully
-        // In this case, set Images filter as the default filter
-        FileBrowser.SetDefaultFilter(".xml");
+    //    // Set default filter that is selected when the dialog is shown (optional)
+    //    // Returns true if the default filter is set successfully
+    //    // In this case, set Images filter as the default filter
+    //    FileBrowser.SetDefaultFilter(".xml");
 
-        if (PlayerPrefs.HasKey("lastFilepath")) {
-            fileBrowser.CurrentPath = PlayerPrefs.GetString("lastFilepath");
-        }
-        fileBrowser.gameObject.SetActive(false);
-    }
+    //    if (PlayerPrefs.HasKey("lastFilepath")) {
+    //        fileBrowser.CurrentPath = PlayerPrefs.GetString("lastFilepath");
+    //    }
+    //    fileBrowser.gameObject.SetActive(false);
+    //}
 
     public void ToggleMainMenu() {
         if (gameObject.activeSelf)

@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
 
 public class FloorExtrudeGeometry : Geometry
 {
     private static GameObject geometryContainer = null;
     private static GeometryLoader gl = null;
-    private static MiniatureTeleportationManager tpm = null;
 
     public static void create(string name, List<Vector2> verticesList, float zOffset)
     {
@@ -63,13 +61,6 @@ public class FloorExtrudeGeometry : Geometry
         floor.layer = 11; // geometry floor
 
         floor.transform.localPosition = new Vector3(0, 0, 0);
-
-        // teleportation area component setup
-        GeometryTeleportationArea tpArea = floor.AddComponent<GeometryTeleportationArea>();
-        tpArea.interactionLayerMask = 1 << LayerMask.NameToLayer("GeometryFloor"); // geometry floor
-        tpArea.teleportTrigger = BaseTeleportationInteractable.TeleportTrigger.OnSelectEnter;
-        if (tpm == null) tpm = FindObjectOfType<MiniatureTeleportationManager>();
-        tpArea.setTeleportationManager(tpm);
         floor.transform.localScale = Vector3.one;
     }
 

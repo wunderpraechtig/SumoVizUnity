@@ -10,7 +10,7 @@ public class ViewModeManager : MonoBehaviour
     [SerializeField] private FullsizeViewMode fullsizeViewMode = null;
 
     public event Action<ViewMode> viewModeEvent;
-    ViewMode currentViewMode = ViewMode.Miniature;
+    ViewMode currentViewMode = ViewMode.Fullsize;
     public ViewMode CurrentViewMode {
         get { return currentViewMode; }
         set {
