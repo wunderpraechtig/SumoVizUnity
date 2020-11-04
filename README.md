@@ -1,6 +1,8 @@
-# SumoVizUnity
+# SumoVizUnity (VR)
 
-3D visualization of trajectories and geometries of crowd simulation software in virtual reality (Optimized for `JuPedSim` and 3D Geometries)
+3D visualization of trajectories and geometries of crowd simulation software in virtual reality (Optimized for `JuPedSim` and 3D Geometries).
+
+The VR conversion of this project was done as part of a bachelor thesis (you can find it [here](https://github.com/nachtmarv/SumoVizUnity/raw/master/Thesis%20Weisbrod.pdf)).
 
 ![alt text](https://raw.githubusercontent.com/nachtmarv/SumoVizUnity/master/image_miniature_.jpg "Miniature View of a JPS dataset")
 
