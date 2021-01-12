@@ -37,14 +37,15 @@ public class FileLoader : MonoBehaviour
 #endif
     }
 
-    public IEnumerator LoadSimulation(string pathGeo, string pathTraj) {
+    public IEnumerator LoadSimulation(string pathGeo, string pathTraj)
+    {
 
         yield return ClearCurrentSimulation();
 
-        if(pathGeo != "")
+        if (pathGeo != "")
             yield return loadGeometryFile(pathGeo);
 
-        if(pathTraj != "")
+        if (pathTraj != "")
             yield return loadPedestrianFile(pathTraj);
     }
 
@@ -213,13 +214,195 @@ public class FileLoader : MonoBehaviour
             }
         }
         CreateFloors(ref meshesFloor);
+        CreateFloorsForHeatmap(ref meshesFloor);
         CreateWalls(ref meshesWallSide, ref meshesWallTop);
         CreateStairs(ref meshesStairs);
 
         RecalculateSimulationTransform();
     }
 
-    private GameObject CreateCombinedMeshObject(string name, ref List<Mesh> meshes, int layer, Material mat) {
+    private void CreateFloorsForHeatmap(ref List<Mesh> meshesFloor)
+    {
+
+        //GameObject floors = CreateCombinedMeshObject("FloorsHeatmap", ref meshesFloor, 11, gl.theme.getFloorMaterial());
+        //floors.AddComponent<MeshCollider>();
+        //floors.AddComponent(System.Type.GetType("HeatmapHandler"));
+        //floors.SetActive(false);
+
+        //Mesh tmp = floors.GetComponent<MeshFilter>().sharedMesh;
+
+        //Mesh newmesh = new Mesh();
+        //newmesh.vertices = tmp.vertices;
+        //newmesh.triangles = tmp.triangles;
+        //newmesh.uv = tmp.uv;
+        //newmesh.normals = tmp.normals;
+        //newmesh.colors = tmp.colors;
+        //newmesh.tangents = tmp.tangents;
+
+
+        //GameObject HeatmapFloors = GameObject.Find("HeatmapVisual");
+        //HeatmapFloors.GetComponent<MeshFilter>().sharedMesh = newmesh;
+        //HeatmapFloors.GetComponent<HeatmapHandler>().setUpHeatmap();
+
+        
+        GameObject HeatmapFloors = new GameObject("HeatmapFloors"); //Mother Object
+
+        HeatmapFloors.transform.parent = simulationObjects.transform;
+
+        for (int i = 0; i < meshesFloor.Count; i++)
+        {
+
+            GameObject singleMesh = new GameObject("HeatmapMesh" + (i + 1), typeof(MeshFilter), typeof(MeshRenderer));
+            singleMesh.transform.parent = HeatmapFloors.transform;
+            MeshFilter mesh_filter = singleMesh.GetComponent<MeshFilter>();
+            mesh_filter.mesh = meshesFloor[i];
+            //singleMesh.GetComponent<Renderer>().material = gl.theme.getFloorMaterial();
+            singleMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
+            //singleMesh.GetComponent<Renderer>().material = Resources.Load<Material>("HeatmapVisual");
+            singleMesh.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            singleMesh.layer = 11;
+            singleMesh.transform.localPosition = new Vector3(0, 0, 0);
+            singleMesh.transform.localScale = Vector3.one;
+            singleMesh.transform.localRotation = Quaternion.Euler(0, 0, 0);
+            //meshesFloor[i]
+
+            //poly label nach  https://github.com/mapbox/polylabel/issues/26 oben
+            //braucht ein float[][][], float [0] sind äußere konturen (die für mich entscheidenden!?), float[0][i] sind die verschiedenen vertices, beim untervektor 0 ist x, bei 1 ist y (float[0][i][0/1]
+
+            float[][][] forPolyLabel = new float[1][][]; //ein "jagged array"
+            forPolyLabel[0] = new float[mesh_filter.mesh.vertices.Length][]; //ein "jagged array"
+
+            for (int j = 0; j < mesh_filter.mesh.vertices.Length; j++)
+            {
+                forPolyLabel[0][j] = new float[2];
+                forPolyLabel[0][j][0] = mesh_filter.mesh.vertices[j].x;
+                forPolyLabel[0][j][1] = mesh_filter.mesh.vertices[j].z;
+            }
+
+            var result = PolyLabel.GetPolyLabel(forPolyLabel);
+            float centerX = result[0];
+            float centerZ = result[1];
+
+            float boundLeft = float.MinValue, boundRight = float.MaxValue, boundBottom = float.MinValue, boundTop = float.MaxValue;
+            Vector3[] meshVertices = mesh_filter.mesh.vertices;
+            //int debug;
+            //if (i == 2 || i == 4 || i == 18 || i == 24 || i == 38)
+            //{
+
+            //    debug = 1;
+            //    var center = mesh_filter.mesh.bounds.center;
+            //}
+
+            //find best fitting rectangle inside the mesh
+            //Rectangle gives limit to max and min x and z value!
+
+            //start with left axis of the rectangle (from center to the left, along the x axis) - am i really allowed to ignore y? what about stairs? TODO:
+
+            //float tmpMinLeft = float.MinValue;
+            //float tmpMinBottom = float.MinValue;
+            //float tmpMax = float.MaxValue;
+
+            for (int j=0; j<meshVertices.Length; j++)
+            {
+                if(meshVertices[j].x < centerX && meshVertices[j].x > boundLeft) //it has to be left from center x, but it also has to be the one closest to x (so within these left values it needs to be the biggest one)
+                {
+                    boundLeft = meshVertices[j].x;
+                }
+                if (meshVertices[j].z < centerZ && meshVertices[j].z > boundBottom) //bot
+                {
+                    boundBottom = meshVertices[j].z;
+                }
+                if (meshVertices[j].x > centerX && meshVertices[j].x < boundRight) //right
+                {
+                    boundRight = meshVertices[j].x;
+                }
+                if (meshVertices[j].z > centerZ && meshVertices[j].z < boundTop) //top
+                {
+                    boundTop = meshVertices[j].z;
+                }
+            }
+            if(boundLeft == float.MinValue)
+            {
+                //not good if true!
+                boundLeft = centerX;
+            }
+            if (boundBottom == float.MinValue)
+            {
+                //not good if true!
+                boundBottom = centerZ;
+            }
+            if (boundRight == float.MaxValue)
+            {
+                //not good if true!
+                boundRight = centerX;
+            }
+            if (boundTop == float.MaxValue)
+            {
+                //not good if true!
+                boundTop = centerZ;
+            }
+
+            GameObject realHeatmapMesh = new GameObject("RealHeatmapMesh" + (i + 1), typeof(MeshFilter), typeof(MeshRenderer));
+            realHeatmapMesh.transform.parent = HeatmapFloors.transform;
+            MeshFilter mesh_filter2 = realHeatmapMesh.GetComponent<MeshFilter>();
+
+
+            //mesh_filter2.mesh = meshesFloor[i]; //take old mesh, but change vertices and triangles!
+
+            Vector3[] vertices = new Vector3[4];
+            vertices[0] = new Vector3(boundLeft, meshesFloor[i].vertices[0].y+1, boundTop); //TODO: can i just take any y? are they all in one plane?
+            vertices[1] = new Vector3(boundRight, meshesFloor[i].vertices[0].y+1, boundTop);
+            vertices[2] = new Vector3(boundRight, meshesFloor[i].vertices[0].y+1, boundBottom);
+            vertices[3] = new Vector3(boundLeft, meshesFloor[i].vertices[0].y+1, boundBottom);
+
+            //TODO: vertices lassen sich nur ersetzen, wenn anzahl vertices vom mesh der anzahl vom neuen vertices entspricht..
+           // mesh_filter2.mesh.vertices = new Vector3[4];
+            mesh_filter2.mesh.vertices = vertices;
+
+            //mesh_filter2.mesh.vertices = new Vector3[4];
+            //mesh_filter2.mesh.vertices[0] = new Vector3(boundTop, meshesFloor[i].vertices[0].y, boundLeft); //TODO: can i just take any y? are they all in one plane?
+            //mesh_filter2.mesh.vertices[1] = new Vector3(boundTop, meshesFloor[i].vertices[0].y, boundRight);
+            //mesh_filter2.mesh.vertices[2] = new Vector3(boundBottom, meshesFloor[i].vertices[0].y, boundRight);
+            //mesh_filter2.mesh.vertices[3] = new Vector3(boundBottom, meshesFloor[i].vertices[0].y, boundLeft);
+
+            int[] triangles = new int[6]; //TODO triangles: currently you can only see the mesh from above. to be able to see it from below we need to add more triangles! counter clockwise so that the normals look to the bottom?
+            triangles[0] = 0;
+            triangles[1] = 1;
+            triangles[2] = 3;
+            triangles[3] = 1;
+            triangles[4] = 2;
+            triangles[5] = 3;
+
+            mesh_filter2.mesh.triangles = triangles;
+            
+            //mesh_filter2.mesh.triangles = new int[6];
+            //mesh_filter2.mesh.triangles[0] = 0;
+            //mesh_filter2.mesh.triangles[1] = 1;
+            //mesh_filter2.mesh.triangles[2] = 3;
+            //mesh_filter2.mesh.triangles[3] = 1;
+            //mesh_filter2.mesh.triangles[4] = 2;
+            //mesh_filter2.mesh.triangles[5] = 3;
+
+            //realHeatmapMesh.GetComponent<Renderer>().material = gl.theme.getFloorMaterial();
+            realHeatmapMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
+            //singleMesh.GetComponent<Renderer>().material = Resources.Load<Material>("HeatmapVisual");
+            realHeatmapMesh.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            realHeatmapMesh.layer = 11;
+            realHeatmapMesh.transform.localPosition = new Vector3(0, 0, 0);
+            realHeatmapMesh.transform.localScale = Vector3.one;
+            realHeatmapMesh.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
+        }
+
+    }
+
+    private void GetBasicRectangleMesh()
+    {
+
+    }
+
+    private GameObject CreateCombinedMeshObject(string name, ref List<Mesh> meshes, int layer, Material mat)
+    {
         Mesh combinedMesh = CombineMeshes(ref meshes);
         GameObject obj = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer));
         obj.transform.parent = simulationObjects.transform;
@@ -230,11 +413,12 @@ public class FileLoader : MonoBehaviour
         obj.layer = layer;
         obj.transform.localPosition = new Vector3(0, 0, 0);
         obj.transform.localScale = Vector3.one;
-        obj.transform.localRotation = Quaternion.Euler(0,0,0);
+        obj.transform.localRotation = Quaternion.Euler(0, 0, 0);
         return obj;
     }
 
-    private void CreateFloors(ref List<Mesh> meshesFloor) {
+    private void CreateFloors(ref List<Mesh> meshesFloor)
+    {
         GameObject floors = CreateCombinedMeshObject("Floors", ref meshesFloor, 11, gl.theme.getFloorMaterial());
         floors.AddComponent<MeshCollider>();
     }
@@ -340,13 +524,8 @@ public class FileLoader : MonoBehaviour
 
         List<PedestrianEntity> result = new List<PedestrianEntity>();
         float totalTime = 0;
-        var thread = new Thread(() => 
+        var thread = new Thread(() =>
         {
-            //TODO: das hier rauslöschen?
-            CultureInfo ci = new CultureInfo("en-US");
-            Thread.CurrentThread.CurrentCulture = ci;
-            Thread.CurrentThread.CurrentUICulture = ci;
-
             try
             {
                 XmlDocument xmlDocTraj = new XmlDocument();
@@ -397,20 +576,23 @@ public class FileLoader : MonoBehaviour
                 result = assembler.createPedestrians();
                 totalTime = assembler.internalTotalTime;
             }
-            catch (System.Exception e) {
+            catch (System.Exception e)
+            {
                 Debug.Log(e.ToString());
                 throw e;
             }
         });
         thread.Name = "PedestrianLoader";
         thread.Start();
-        while (thread.IsAlive) {
+        while (thread.IsAlive)
+        {
             yield return null;
         }
         thread.Join();
 
         gameState.TotalTime = totalTime;
-        foreach (var entity in result) {
+        foreach (var entity in result)
+        {
             pedestrianSystem.AddPedestrianEntity(entity);
         }
     }

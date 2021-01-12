@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: 5e9a41aecbcc38b4bb9e85724a42f989
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - HeatmapMaterial: {fileID: 2100000, guid: 13ef58289235e474fa859bb25b43dce9, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
