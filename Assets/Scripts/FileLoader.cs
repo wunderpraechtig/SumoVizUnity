@@ -244,12 +244,30 @@ public class FileLoader : MonoBehaviour
         //HeatmapFloors.GetComponent<MeshFilter>().sharedMesh = newmesh;
         //HeatmapFloors.GetComponent<HeatmapHandler>().setUpHeatmap();
 
-        
+
+        List<float> yValues = new List<float>();
+
         GameObject HeatmapFloors = new GameObject("HeatmapFloors"); //Mother Object
 
         HeatmapFloors.transform.parent = simulationObjects.transform;
 
+        Dictionary<float, List<Mesh>> meshesOnSameLevel = new Dictionary<float, List<Mesh>>();
+
         for (int i = 0; i < meshesFloor.Count; i++)
+        {
+            Mesh currentMesh = meshesFloor[i];
+            float currentYValue = currentMesh.vertices[0].y; //it shouldnt matter whether vertices[0], vertices[1] or vertices[2] is taken, since they all should have the same y value
+
+            if (!meshesOnSameLevel.ContainsKey(currentYValue))
+            {
+                meshesOnSameLevel[currentYValue] = new List<Mesh>();
+            }
+            meshesOnSameLevel[currentYValue].Add(currentMesh);
+        }
+
+
+        /*
+            for (int i = 0; i < meshesFloor.Count; i++)
         {
 
             GameObject singleMesh = new GameObject("HeatmapMesh" + (i + 1), typeof(MeshFilter), typeof(MeshRenderer));
@@ -264,117 +282,139 @@ public class FileLoader : MonoBehaviour
             singleMesh.transform.localPosition = new Vector3(0, 0, 0);
             singleMesh.transform.localScale = Vector3.one;
             singleMesh.transform.localRotation = Quaternion.Euler(0, 0, 0);
-            //meshesFloor[i]
 
-            //poly label nach  https://github.com/mapbox/polylabel/issues/26 oben
-            //braucht ein float[][][], float [0] sind äußere konturen (die für mich entscheidenden!?), float[0][i] sind die verschiedenen vertices, beim untervektor 0 ist x, bei 1 ist y (float[0][i][0/1]
 
-            float[][][] forPolyLabel = new float[1][][]; //ein "jagged array"
-            forPolyLabel[0] = new float[mesh_filter.mesh.vertices.Length][]; //ein "jagged array"
+            // GameObject realHeatmapMesh = new GameObject("RealHeatmapMesh" + (i + 1), typeof(MeshFilter), typeof(MeshRenderer));
+            // realHeatmapMesh.transform.parent = HeatmapFloors.transform;
+            // MeshFilter mesh_filter2 = realHeatmapMesh.GetComponent<MeshFilter>();
 
-            for (int j = 0; j < mesh_filter.mesh.vertices.Length; j++)
-            {
-                forPolyLabel[0][j] = new float[2];
-                forPolyLabel[0][j][0] = mesh_filter.mesh.vertices[j].x;
-                forPolyLabel[0][j][1] = mesh_filter.mesh.vertices[j].z;
-            }
 
-            var result = PolyLabel.GetPolyLabel(forPolyLabel);
-            float centerX = result[0];
-            float centerZ = result[1];
+            // //mesh_filter2.mesh = meshesFloor[i]; //take old mesh, but change vertices and triangles!
 
-            float boundLeft = float.MinValue, boundRight = float.MaxValue, boundBottom = float.MinValue, boundTop = float.MaxValue;
+            // Vector3[] vertices = new Vector3[4];
+            // vertices[0] = new Vector3(boundLeft, meshesFloor[i].vertices[0].y+1, boundTop); //TODO: can i just take any y? are they all in one plane?
+            // vertices[1] = new Vector3(boundRight, meshesFloor[i].vertices[0].y+1, boundTop);
+            // vertices[2] = new Vector3(boundRight, meshesFloor[i].vertices[0].y+1, boundBottom);
+            // vertices[3] = new Vector3(boundLeft, meshesFloor[i].vertices[0].y+1, boundBottom);
+
+            // //TODO: vertices lassen sich nur ersetzen, wenn anzahl vertices vom mesh der anzahl vom neuen vertices entspricht..
+            //// mesh_filter2.mesh.vertices = new Vector3[4];
+            // mesh_filter2.mesh.vertices = vertices;
+
+            // //mesh_filter2.mesh.vertices = new Vector3[4];
+            // //mesh_filter2.mesh.vertices[0] = new Vector3(boundTop, meshesFloor[i].vertices[0].y, boundLeft); //TODO: can i just take any y? are they all in one plane?
+            // //mesh_filter2.mesh.vertices[1] = new Vector3(boundTop, meshesFloor[i].vertices[0].y, boundRight);
+            // //mesh_filter2.mesh.vertices[2] = new Vector3(boundBottom, meshesFloor[i].vertices[0].y, boundRight);
+            // //mesh_filter2.mesh.vertices[3] = new Vector3(boundBottom, meshesFloor[i].vertices[0].y, boundLeft);
+
+            // int[] triangles = new int[6]; //TODO triangles: currently you can only see the mesh from above. to be able to see it from below we need to add more triangles! counter clockwise so that the normals look to the bottom?
+            // triangles[0] = 0;
+            // triangles[1] = 1;
+            // triangles[2] = 3;
+            // triangles[3] = 1;
+            // triangles[4] = 2;
+            // triangles[5] = 3;
+
+            // mesh_filter2.mesh.triangles = triangles;
+
+            // //mesh_filter2.mesh.triangles = new int[6];
+            // //mesh_filter2.mesh.triangles[0] = 0;
+            // //mesh_filter2.mesh.triangles[1] = 1;
+            // //mesh_filter2.mesh.triangles[2] = 3;
+            // //mesh_filter2.mesh.triangles[3] = 1;
+            // //mesh_filter2.mesh.triangles[4] = 2;
+            // //mesh_filter2.mesh.triangles[5] = 3;
+
+            // //realHeatmapMesh.GetComponent<Renderer>().material = gl.theme.getFloorMaterial();
+            // realHeatmapMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
+            // //singleMesh.GetComponent<Renderer>().material = Resources.Load<Material>("HeatmapVisual");
+            // realHeatmapMesh.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            // realHeatmapMesh.layer = 11;
+            // realHeatmapMesh.transform.localPosition = new Vector3(0, 0, 0);
+            // realHeatmapMesh.transform.localScale = Vector3.one;
+            // realHeatmapMesh.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
+
             Vector3[] meshVertices = mesh_filter.mesh.vertices;
-            //int debug;
-            //if (i == 2 || i == 4 || i == 18 || i == 24 || i == 38)
-            //{
 
-            //    debug = 1;
-            //    var center = mesh_filter.mesh.bounds.center;
+
+            //for (int j = 0; j < meshVertices.Length; j++)
+            //{
+            int j = 0;
+            if (!yValues.Contains(meshVertices[j].y))
+            {
+                yValues.Add(meshVertices[j].y);
+            }
+            else
+            {
+                if (yValues[yValues.Count - 1] != meshVertices[j].y)
+                {
+                    Debug.Log("!!!!!!!!!!!!!!!!!!!!!!!The same y value (" + meshVertices[j].y + ") is not at the end of the vector! (Mesh " + (i + 1) + ")");
+                }
+            }
             //}
 
-            //find best fitting rectangle inside the mesh
-            //Rectangle gives limit to max and min x and z value!
 
-            //start with left axis of the rectangle (from center to the left, along the x axis) - am i really allowed to ignore y? what about stairs? TODO:
+            Debug.Log("Mesh No " + (i + 1) + " has these y Values:" + mesh_filter.mesh.vertices[0].y + ", ");
 
-            //float tmpMinLeft = float.MinValue;
-            //float tmpMinBottom = float.MinValue;
-            //float tmpMax = float.MaxValue;
 
-            for (int j=0; j<meshVertices.Length; j++)
-            {
-                if(meshVertices[j].x < centerX && meshVertices[j].x > boundLeft) //it has to be left from center x, but it also has to be the one closest to x (so within these left values it needs to be the biggest one)
-                {
-                    boundLeft = meshVertices[j].x;
-                }
-                if (meshVertices[j].z < centerZ && meshVertices[j].z > boundBottom) //bot
-                {
-                    boundBottom = meshVertices[j].z;
-                }
-                if (meshVertices[j].x > centerX && meshVertices[j].x < boundRight) //right
-                {
-                    boundRight = meshVertices[j].x;
-                }
-                if (meshVertices[j].z > centerZ && meshVertices[j].z < boundTop) //top
-                {
-                    boundTop = meshVertices[j].z;
-                }
-            }
-            if(boundLeft == float.MinValue)
-            {
-                //not good if true!
-                boundLeft = centerX;
-            }
-            if (boundBottom == float.MinValue)
-            {
-                //not good if true!
-                boundBottom = centerZ;
-            }
-            if (boundRight == float.MaxValue)
-            {
-                //not good if true!
-                boundRight = centerX;
-            }
-            if (boundTop == float.MaxValue)
-            {
-                //not good if true!
-                boundTop = centerZ;
-            }
 
-            GameObject realHeatmapMesh = new GameObject("RealHeatmapMesh" + (i + 1), typeof(MeshFilter), typeof(MeshRenderer));
+
+
+        }
+
+*/
+        //Debug.Log("Total amount of distinct y Values:" + yValues.Count);
+        int meshNo = 0;
+        foreach (var entry in meshesOnSameLevel)
+        {
+            var key = entry.Key;
+            var value = entry.Value;
+            //create all the meshes, that have the same y value here
+            GameObject heatmapFloors = CreateCombinedMeshObject("HeatmapFloor" + (++meshNo), ref value, 11, gl.theme.getFloorMaterial());
+            heatmapFloors.transform.parent = HeatmapFloors.transform;
+            heatmapFloors.AddComponent<MeshCollider>();
+            
+
+
+
+            GameObject realHeatmapMesh = new GameObject("RealHeatmapMesh" + (meshNo), typeof(MeshFilter), typeof(MeshRenderer));
             realHeatmapMesh.transform.parent = HeatmapFloors.transform;
             MeshFilter mesh_filter2 = realHeatmapMesh.GetComponent<MeshFilter>();
 
-
+            
             //mesh_filter2.mesh = meshesFloor[i]; //take old mesh, but change vertices and triangles!
 
             Vector3[] vertices = new Vector3[4];
-            vertices[0] = new Vector3(boundLeft, meshesFloor[i].vertices[0].y+1, boundTop); //TODO: can i just take any y? are they all in one plane?
-            vertices[1] = new Vector3(boundRight, meshesFloor[i].vertices[0].y+1, boundTop);
-            vertices[2] = new Vector3(boundRight, meshesFloor[i].vertices[0].y+1, boundBottom);
-            vertices[3] = new Vector3(boundLeft, meshesFloor[i].vertices[0].y+1, boundBottom);
+            MeshFilter tmpFilter = (MeshFilter)heatmapFloors.GetComponent("MeshFilter");
 
-            //TODO: vertices lassen sich nur ersetzen, wenn anzahl vertices vom mesh der anzahl vom neuen vertices entspricht..
-           // mesh_filter2.mesh.vertices = new Vector3[4];
-            mesh_filter2.mesh.vertices = vertices;
+            Bounds meshFilterBounds = tmpFilter.mesh.bounds;
 
-            //mesh_filter2.mesh.vertices = new Vector3[4];
-            //mesh_filter2.mesh.vertices[0] = new Vector3(boundTop, meshesFloor[i].vertices[0].y, boundLeft); //TODO: can i just take any y? are they all in one plane?
-            //mesh_filter2.mesh.vertices[1] = new Vector3(boundTop, meshesFloor[i].vertices[0].y, boundRight);
-            //mesh_filter2.mesh.vertices[2] = new Vector3(boundBottom, meshesFloor[i].vertices[0].y, boundRight);
-            //mesh_filter2.mesh.vertices[3] = new Vector3(boundBottom, meshesFloor[i].vertices[0].y, boundLeft);
+            int[] trianglesNew;
 
-            int[] triangles = new int[6]; //TODO triangles: currently you can only see the mesh from above. to be able to see it from below we need to add more triangles! counter clockwise so that the normals look to the bottom?
-            triangles[0] = 0;
-            triangles[1] = 1;
-            triangles[2] = 3;
-            triangles[3] = 1;
-            triangles[4] = 2;
-            triangles[5] = 3;
+            //var result = RecalculateVerticesForMesh(meshFilterBounds, 5);
 
-            mesh_filter2.mesh.triangles = triangles;
-            
+            var result = RecalculateVerticesAndIndecesForMesh(meshFilterBounds, 5, out trianglesNew);
+
+            //vertices[0] = new Vector3(meshFilterBounds.min.x, key + 1, meshFilterBounds.max.z); //Topleft
+            //vertices[1] = new Vector3(meshFilterBounds.max.x, key + 1, meshFilterBounds.max.z); //Topright
+            //vertices[2] = new Vector3(meshFilterBounds.max.x, key + 1, meshFilterBounds.min.z); //Bottomright
+            //vertices[3] = new Vector3(meshFilterBounds.min.x, key + 1, meshFilterBounds.min.z); //Bottomleft
+
+            //mesh_filter2.mesh.vertices = vertices;
+            mesh_filter2.mesh.vertices = result;
+
+            //int[] triangles = new int[6]; //TODO triangles: currently you can only see the mesh from above. to be able to see it from below we need to add more triangles! counter clockwise so that the normals look to the bottom?
+            //triangles[0] = 0;
+            //triangles[1] = 1;
+            //triangles[2] = 3;
+            //triangles[3] = 1;
+            //triangles[4] = 2;
+            //triangles[5] = 3;
+
+            //mesh_filter2.mesh.triangles = triangles;
+            mesh_filter2.mesh.triangles = trianglesNew;
+
             //mesh_filter2.mesh.triangles = new int[6];
             //mesh_filter2.mesh.triangles[0] = 0;
             //mesh_filter2.mesh.triangles[1] = 1;
@@ -382,6 +422,25 @@ public class FileLoader : MonoBehaviour
             //mesh_filter2.mesh.triangles[3] = 1;
             //mesh_filter2.mesh.triangles[4] = 2;
             //mesh_filter2.mesh.triangles[5] = 3;
+
+
+            Vector2[] uvs = new Vector2[mesh_filter2.mesh.vertices.Length];
+            for (int i = 0; i < (uvs.Length-1); i++)
+            {
+                //uvs[i] = new Vector2(mesh_filter2.mesh.vertices[i].x, mesh_filter2.mesh.vertices[i].z);
+                //uvs[i] = new Vector2(0,0);
+                uvs[i] = new Vector2(1,1);
+            }
+
+
+            uvs[mesh_filter2.mesh.vertices.Length - 1] = new Vector2(0, 0);
+            uvs[mesh_filter2.mesh.vertices.Length - 2] = new Vector2(0, 0);
+            uvs[mesh_filter2.mesh.vertices.Length - 3] = new Vector2(0, 0);
+            //uvs[mesh_filter2.mesh.vertices.Length - 4] = new Vector2(0, 0);
+            //uvs[mesh_filter2.mesh.vertices.Length - 5] = new Vector2(0, 0);
+            //uvs[mesh_filter2.mesh.vertices.Length - 6] = new Vector2(0, 0);
+
+            mesh_filter2.mesh.uv = uvs;
 
             //realHeatmapMesh.GetComponent<Renderer>().material = gl.theme.getFloorMaterial();
             realHeatmapMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
@@ -394,10 +453,232 @@ public class FileLoader : MonoBehaviour
 
         }
 
+
+
     }
 
-    private void GetBasicRectangleMesh()
+    private Vector3[] RecalculateVerticesForMesh(Bounds boundingBox, float size) //, Vector3[] oldVertices)
     {
+
+
+        float width = boundingBox.size.x; //get the height of the bounding box (BB)
+        float height = boundingBox.size.z; //get the width of the BB
+
+        //how many quads fit into width/height?
+        float amountQuadsWidthFloat = width / size;
+        float amountQuadsHeightFloat = height / size;
+        int amountQuadsWidth = (int)amountQuadsWidthFloat; //TODO: is fraction part cut off?
+        int amountQuadsHeight = (int)amountQuadsHeightFloat;
+
+        float sizeEdgeQuadsX = width - (amountQuadsWidth * size);
+        float sizeEdgeQuadsZ = height - (amountQuadsHeight * size); //TODO: passt
+
+        //how many vertices will there be in the end? per quad we have 3*2 vertices (3 vertices per triangle, and we need 2 triangles per quad because every single vertex can have a different uv coordinate!)
+        int amountVertices = amountQuadsWidth * 6 * amountQuadsHeight;
+
+        //TODO: wie Randfälle dazu rechnen? 
+        if (sizeEdgeQuadsX != 0)
+        {
+            amountVertices += amountQuadsHeight * 6; //on the width side there is one more quad per quad along the height
+
+        }
+        if (sizeEdgeQuadsZ != 0)
+        {
+            amountVertices += amountQuadsWidth * 6; //on the height side: one more quad per quad along the width, and if there is an edge quad along the height -> one more quad
+            if (sizeEdgeQuadsX != 0)
+            {
+                amountVertices += 6; //add 2 more triangles
+            }
+        }
+
+        Vector3[] newVertices = new Vector3[amountVertices];
+
+        Vector3 startingPoint = new Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.max.z); //take top left of the bounding box
+
+        for (int i = 0; i < amountQuadsHeight; i++)
+        {
+            for (int j = 0; j < amountQuadsWidth; j++) //muss es doch j + 3 sein oder so?
+            {
+                newVertices[j] = startingPoint; //topleft vertex //erst 0
+                newVertices[++j] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - size); //bottomright vertex //dann 1
+                newVertices[++j] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - size); //bottomleft vertex //dann 2
+
+                newVertices[++j] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex //dann 3
+                newVertices[++j] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z); //topright vertex //dann 4
+                newVertices[++j] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - size); //bottomright vertex //dann auf 5 erhöht (bzw um 5 wenn fertig)
+
+                startingPoint.x += size;
+            }
+            //am ende startingPoint x wieder resetten nach links, aber starting point z eins nach unten wandern lassen!
+            if (sizeEdgeQuadsX != 0)
+            {
+                newVertices[amountQuadsWidth] = startingPoint; //topleft vertex //erst 0
+                newVertices[amountQuadsWidth + 1] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - size); //bottomright vertex //dann 1
+                newVertices[amountQuadsWidth + 2] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - size); //bottomleft vertex //dann 2
+
+                newVertices[amountQuadsWidth + 3] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex //dann 3
+                newVertices[amountQuadsWidth + 4] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z); //topright vertex //dann 4
+                newVertices[amountQuadsWidth + 5] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - size); //bottomright vertex //dann auf 5 erhöht (bzw um 5 wenn fertig)
+
+                //startingPoint = new Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.max.z);
+                startingPoint.x = boundingBox.min.x;
+            }
+            startingPoint.z -= size; //TODO: ist das manchmal ein schritt zu viel?
+        }
+
+        //look whether a last row of not fully sized quads is needed
+        if (sizeEdgeQuadsZ != 0)
+        {
+            int startIndex = amountVertices - (amountQuadsWidth * 6);
+            if (sizeEdgeQuadsX != 0)
+            {
+                startIndex--;
+            }
+            for (int i = 0; i < amountQuadsWidth; i++)
+            {
+                newVertices[startIndex++] = startingPoint; //topleft vertex //erst 0
+                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex //dann 1
+                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomleft vertex //dann 2
+
+                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex //dann 3
+                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z); //topright vertex //dann 4
+                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex //dann auf 5 erhöht (bzw um 5 wenn fertig)
+
+
+                startingPoint.x += size;
+
+            }
+            if (sizeEdgeQuadsX != 0)
+            {
+                newVertices[startIndex++] = startingPoint; //topleft vertex //erst 0
+                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - size); //bottomright vertex //dann 1
+                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - size); //bottomleft vertex //dann 2
+
+                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex //dann 3
+                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z); //topright vertex //dann 4
+                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - size); //bottomright vertex //dann auf 5 erhöht (bzw um 5 wenn fertig)
+            }
+        }
+        //also take care of the edge quads!
+        return newVertices;
+
+    }
+
+    private Vector3[] RecalculateVerticesAndIndecesForMesh(Bounds boundingBox, float size, out int[] triangles) //, Vector3[] oldVertices)
+    {
+
+
+        float width = boundingBox.size.x; //get the height of the bounding box (BB)
+        float height = boundingBox.size.z; //get the width of the BB
+
+        //how many quads fit into width/height?
+        float amountQuadsWidthFloat = width / size;
+        float amountQuadsHeightFloat = height / size;
+        int amountQuadsWidth = (int)amountQuadsWidthFloat; //TODO: is fraction part cut off?
+        int amountQuadsHeight = (int)amountQuadsHeightFloat;
+
+        float sizeEdgeQuadsX = width - (amountQuadsWidth * size);
+        float sizeEdgeQuadsZ = height - (amountQuadsHeight * size); //TODO: passt
+
+        //how many vertices will there be in the end? per quad we have 3*2 vertices (3 vertices per triangle, and we need 2 triangles per quad because every single vertex can have a different uv coordinate!)
+        int amountVertices = amountQuadsWidth * 6 * amountQuadsHeight;
+
+        //TODO: wie Randfälle dazu rechnen? 
+        if (sizeEdgeQuadsX != 0)
+        {
+            amountVertices += amountQuadsHeight * 6; //on the width side there is one more quad per quad along the height
+
+        }
+        if (sizeEdgeQuadsZ != 0)
+        {
+            amountVertices += amountQuadsWidth * 6; //on the height side: one more quad per quad along the width, and if there is an edge quad along the height -> one more quad
+            if (sizeEdgeQuadsX != 0)
+            {
+                amountVertices += 6; //add 2 more triangles
+            }
+        }
+
+        Vector3[] newVertices = new Vector3[amountVertices];
+        triangles = new int[amountVertices]; //also 6 entries per quad
+        Vector3 startingPoint = new Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.max.z); //take top left of the bounding box
+
+        int currentVertex = 0;
+
+        for (int i = 0; i < amountQuadsHeight; i++)
+        {
+            for (int j = 0; j < amountQuadsWidth; j++) //muss es doch j + 3 sein oder so?
+            {
+                newVertices[currentVertex++] = startingPoint; //topleft vertex //erst 0
+                newVertices[currentVertex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - size); //bottomright vertex //dann 1
+                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - size); //bottomleft vertex //dann 2
+
+                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex //dann 3
+                newVertices[currentVertex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z); //topright vertex //dann 4
+                newVertices[currentVertex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - size); //bottomright vertex //dann auf 5 erhöht (bzw um 5 wenn fertig)
+
+                startingPoint.x += size;
+            }
+            //am ende startingPoint x wieder resetten nach links, aber starting point z eins nach unten wandern lassen!
+            if (sizeEdgeQuadsX != 0)
+            {
+                //TODO: hier muss es mit j weitergehen!
+                newVertices[currentVertex++] = startingPoint; //topleft vertex //erst 0
+                newVertices[currentVertex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - size); //bottomright vertex //dann 1
+                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - size); //bottomleft vertex //dann 2
+
+                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex //dann 3
+                newVertices[currentVertex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z); //topright vertex //dann 4
+                newVertices[currentVertex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - size); //bottomright vertex //dann auf 5 erhöht (bzw um 5 wenn fertig)
+
+                //startingPoint = new Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.max.z);
+                startingPoint.x = boundingBox.min.x;
+            }
+            startingPoint.z -= size; //TODO: ist das manchmal ein schritt zu viel?
+        }
+
+        //look whether a last row of not fully sized quads is needed
+        if (sizeEdgeQuadsZ != 0)
+        {
+            int startIndex = amountVertices - (amountQuadsWidth * 6); //or do it with currentVertex!
+            if (sizeEdgeQuadsX != 0)
+            {
+                startIndex-=6;
+            }
+            for (int i = 0; i < amountQuadsWidth; i++)
+            {
+                //TODO: wenn es funktioniert: tausche startIndex aus mit currentVertex
+
+                newVertices[startIndex++] = startingPoint; //topleft vertex //erst 0
+                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex //dann 1
+                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomleft vertex //dann 2
+
+                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex //dann 3
+                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z); //topright vertex //dann 4
+                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex //dann auf 5 erhöht (bzw um 5 wenn fertig)
+
+
+                startingPoint.x += size;
+
+            }
+            if (sizeEdgeQuadsX != 0)
+            {
+                newVertices[startIndex++] = startingPoint; //topleft vertex //erst 0
+                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex //dann 1
+                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomleft vertex //dann 2
+
+                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex //dann 3
+                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z); //topright vertex //dann 4
+                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex //dann auf 5 erhöht (bzw um 5 wenn fertig)
+            }
+        }
+
+        for(int i = 0; i<amountVertices; i++)
+        {
+            triangles[i] = i;
+        }
+
+        //also take care of the edge quads!
+        return newVertices;
 
     }
 
