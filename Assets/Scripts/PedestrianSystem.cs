@@ -8,6 +8,7 @@ public class PedestrianSystem : MonoBehaviour
     [SerializeField] private List<Color> pedestrianColors = new List<Color>();
     [SerializeField] private GameObject pedestrianParentObject = null;
     [SerializeField] private GameObject pedestrianPrefab = null;
+    [SerializeField] private HeatmapHandler heatmapHandler = null;
     [SerializeField] private uint initialPoolSize = 100;
     [SerializeField] private int densityRecalculationFrequency = 10;
     LinkedList<PedestrianPoolObject> pedestrianPool = new LinkedList<PedestrianPoolObject>();
@@ -141,6 +142,9 @@ public class PedestrianSystem : MonoBehaviour
                 }
 
                 poolObject.obj.transform.localPosition = newPosition;
+                heatmapHandler.AddPedestrian(newPosition); //ED: new //TODO:
+
+
             }
             else
             {

@@ -4174,6 +4174,7 @@ MonoBehaviour:
   pedestrianColors: []
   pedestrianParentObject: {fileID: 2040457018}
   pedestrianPrefab: {fileID: 100182, guid: 7ca5afc2e687d4d0d88884c6224622f1, type: 3}
+  heatmapHandler: {fileID: 149679871}
   initialPoolSize: 100
   densityRecalculationFrequency: 10
   gameState: {fileID: 577959485}

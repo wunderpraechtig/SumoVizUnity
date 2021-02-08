@@ -50,8 +50,6 @@ public class FileLoader : MonoBehaviour
             yield return loadPedestrianFile(pathTraj);
 
 
-        PedestrianPosition position = new PedestrianPosition(-1, 0, 5f, 3f, 0.3f); //TODO: delete this! its only testwise in here
-        heatmapHandler.addPedestrian(position);
     }
 
     public IEnumerator ClearCurrentSimulation()
@@ -295,7 +293,7 @@ public class FileLoader : MonoBehaviour
             mesh_filter2.mesh.uv = uvs;
             Mesh meshOfFilter = mesh_filter2.mesh;
 
-            heatmapHandler.addToHeatmapMeshes(ref meshOfFilter);
+            heatmapHandler.AddToHeatmapMeshes(ref meshOfFilter);
 
             realHeatmapMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
             realHeatmapMesh.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -419,7 +417,7 @@ public class FileLoader : MonoBehaviour
         startingPoint = new Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.max.z);
         //fill in all the information into the HeatmapHandler
         HeatmapData heatmapData = new HeatmapData(startingPoint, width, height, roundedUpWidth, roundedUpHeight);
-        heatmapHandler.addToHeatmapData(heatmapData);
+        heatmapHandler.AddToHeatmapData(heatmapData);
 
         return newVertices;
 
