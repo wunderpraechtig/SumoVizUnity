@@ -254,6 +254,7 @@ public class FileLoader : MonoBehaviour
             var key = entry.Key;
             var value = entry.Value;
 
+            //for debugging purposes: this code instantiates all submeshes of the big floors mesh
             //create all the meshes, that have the same y value here
             //GameObject heatmapFloors = CreateCombinedMeshObject("HeatmapFloor" + (++meshNo), ref value, 11, gl.theme.getFloorMaterial());
             //heatmapFloors.transform.parent = HeatmapFloors.transform;
@@ -371,8 +372,9 @@ public class FileLoader : MonoBehaviour
                 newVertices[currentVertex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z); //topright vertex 
                 newVertices[currentVertex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - size); //bottomright vertex 
 
-                startingPoint.x = boundingBox.min.x;
             }
+            
+            startingPoint.x = boundingBox.min.x;
             startingPoint.z -= size; 
         }
 

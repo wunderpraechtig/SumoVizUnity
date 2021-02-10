@@ -142,7 +142,7 @@ public class PedestrianSystem : MonoBehaviour
                 }
 
                 poolObject.obj.transform.localPosition = newPosition;
-                heatmapHandler.AddPedestrian(newPosition); //ED: new //TODO:
+                heatmapHandler.TransmitPedestrianPosition(newPosition); //ED: new //TODO:
 
 
             }

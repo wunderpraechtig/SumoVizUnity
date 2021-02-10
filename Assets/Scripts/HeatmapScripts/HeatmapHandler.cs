@@ -14,7 +14,6 @@ public class HeatmapHandler : MonoBehaviour
     {
         HeatmapMeshes = new List<Mesh>();
         HeatmapData = new List<HeatmapData>();
-        //this.QuadSize = 1; //TODO: right now hardcoded
         this.PedestrianHeightTolerance = 0.01f;
     }
 
@@ -27,7 +26,7 @@ public class HeatmapHandler : MonoBehaviour
 
 
 
-    public void RefreshUVs()
+    public void UpdateAllUVs() //TODO: rename? die fkt updated nur uvs von leeren quads.. 
     {
         for (int i = 0; i < HeatmapData.Count; i++)
         {
@@ -36,17 +35,7 @@ public class HeatmapHandler : MonoBehaviour
             {
                 int currentEntry = currentHeatmap.amountPedestriansPerQuad[j];
                 var UVs = HeatmapMeshes[i].uv;
-                if (currentEntry > 0) //TODO: how many pedestrians lead to which color?
-                {
-                    UVs[j * 6] = new Vector2(1, 1);
-                    UVs[j * 6+1] = new Vector2(1, 1);
-                    UVs[j * 6+2] = new Vector2(1, 1);
-                    UVs[j * 6+3] = new Vector2(1, 1);
-                    UVs[j * 6+4] = new Vector2(1, 1);
-                    UVs[j * 6+5] = new Vector2(1, 1);
-
-                }
-                else if (currentEntry == 0)
+                if (currentEntry == 0)
                 {
                     UVs[j * 6] = new Vector2(0, 0);
                     UVs[j * 6 + 1] = new Vector2(0, 0);
@@ -57,8 +46,21 @@ public class HeatmapHandler : MonoBehaviour
                 }
                 else
                 {
-                    int debug = 1; //houston, we have a problem //TODO: delet this //exception
+                    //never called??!! TODO: prob yes because they are all reset!
+                    //1 should result in (1,1), values greater than X should be 1/64
+                    UVs[j * 6] = new Vector2(1, 1);
+                    UVs[j * 6 + 1] = new Vector2(1, 1);
+                    UVs[j * 6 + 2] = new Vector2(1, 1);
+                    UVs[j * 6 + 3] = new Vector2(1, 1);
+                    UVs[j * 6 + 4] = new Vector2(1, 1);
+                    UVs[j * 6 + 5] = new Vector2(1, 1);
 
+                    //UVs[j * 6] = new Vector2(1 / 64, 1);
+                    //UVs[j * 6 + 1] = new Vector2(1 / 64, 1);
+                    //UVs[j * 6 + 2] = new Vector2(1 / 64, 1);
+                    //UVs[j * 6 + 3] = new Vector2(1 / 64, 1);
+                    //UVs[j * 6 + 4] = new Vector2(1 / 64, 1);
+                    //UVs[j * 6 + 5] = new Vector2(1 / 64, 1);
                 }
 
                 HeatmapMeshes[i].uv = UVs;
@@ -76,45 +78,27 @@ public class HeatmapHandler : MonoBehaviour
         HeatmapMeshes[indexMesh].uv = currentUVs;
     }
 
-    //public bool AddPedestrian(PedestrianPosition position) //TODO: exception //TODO rename: transmit position oder so
-    //{
 
-    //    var resutingIndex = AffectedMeshIndex(position.getZ()); //for the pedestriandata z seems to be the height, while for meshes y is the height!
-    //    int affectedIndex;
-    //    if (resutingIndex.HasValue)
-    //    {
-    //        affectedIndex = resutingIndex.Value;
-    //    }
-    //    else
-    //    {
-    //        return false;
-    //    }
-
-    //    var affectedVertices = HeatmapData[affectedIndex].getVertexIndexFromCoords(position.getX(), position.getZ(), QuadSize);
-    //    UpdateUVsAtIndex(affectedIndex, affectedVertices);
-    //    return true; //successfully updated
-    //}
-
-    public bool AddPedestrian(Vector3 position) //TODO: exception //TODO rename: transmit position oder so
+    public bool TransmitPedestrianPosition(Vector3 position) //TODO: exception //TODO rename: transmit position oder so
     {
 
-        var resutingIndex = AffectedMeshIndex(position.y); //for the pedestriandata z seems to be the height, while for meshes y is the height! But the pedestriansystem uses y for height again...
-        int affectedIndex;
-        if (resutingIndex.HasValue)
+        var resutingMeshIndexNullable = AffectedMeshIndex(position.y); 
+        int affectedMeshIndex; //TODO: with exception
+        if (resutingMeshIndexNullable.HasValue)
         {
-            affectedIndex = resutingIndex.Value;
+            affectedMeshIndex = resutingMeshIndexNullable.Value;
         }
         else
         {
             return false; //currently gets here if pedestrian is on stairs
         }
 
-        var affectedVertices = HeatmapData[affectedIndex].getVertexIndexFromCoords(position.x, position.z, QuadSize);
-        if (affectedVertices == -1)
+        var affectedVerticesStartIndex = HeatmapData[affectedMeshIndex].getVertexIndexFromCoords(position.x, position.z, QuadSize);
+        if (affectedVerticesStartIndex == -1)
         {
             return false;
         }
-        UpdateUVsAtIndex(affectedIndex, affectedVertices);
+        UpdateUVsAtIndex(affectedMeshIndex, affectedVerticesStartIndex);
         return true; //successfully updated
     }
 
@@ -154,6 +138,6 @@ public class HeatmapHandler : MonoBehaviour
                 HeatmapData[i].amountPedestriansPerQuad[j] = 0;
             }
         }
-        RefreshUVs();
+        UpdateAllUVs();
     }
 }
