@@ -9,6 +9,7 @@ public class HeatmapHandler : MonoBehaviour
     private float PedestrianHeightTolerance;
 
     public float QuadSize;
+    public float MaxPedestriansOnQuad;
 
     HeatmapHandler()
     {
@@ -23,83 +24,68 @@ public class HeatmapHandler : MonoBehaviour
         this.HeatmapData.Add(data);
 
     }
-
-
-
-    public void UpdateAllUVs() //TODO: rename? die fkt updated nur uvs von leeren quads.. 
+    private void UpdateUVsAtIndex(int indexMesh, int quadIndex) //update UV entsprechend pedestriancount erhöhen!
     {
-        for (int i = 0; i < HeatmapData.Count; i++)
-        {
-            var currentHeatmap = HeatmapData[i];
-            for (int j = 0; j < currentHeatmap.amountPedestriansPerQuad.Length; j++)
-            {
-                int currentEntry = currentHeatmap.amountPedestriansPerQuad[j];
-                var UVs = HeatmapMeshes[i].uv;
-                if (currentEntry == 0)
-                {
-                    UVs[j * 6] = new Vector2(0, 0);
-                    UVs[j * 6 + 1] = new Vector2(0, 0);
-                    UVs[j * 6 + 2] = new Vector2(0, 0);
-                    UVs[j * 6 + 3] = new Vector2(0, 0);
-                    UVs[j * 6 + 4] = new Vector2(0, 0);
-                    UVs[j * 6 + 5] = new Vector2(0, 0);
-                }
-                else
-                {
-                    //never called??!! TODO: prob yes because they are all reset!
-                    //1 should result in (1,1), values greater than X should be 1/64
-                    UVs[j * 6] = new Vector2(1, 1);
-                    UVs[j * 6 + 1] = new Vector2(1, 1);
-                    UVs[j * 6 + 2] = new Vector2(1, 1);
-                    UVs[j * 6 + 3] = new Vector2(1, 1);
-                    UVs[j * 6 + 4] = new Vector2(1, 1);
-                    UVs[j * 6 + 5] = new Vector2(1, 1);
-
-                    //UVs[j * 6] = new Vector2(1 / 64, 1);
-                    //UVs[j * 6 + 1] = new Vector2(1 / 64, 1);
-                    //UVs[j * 6 + 2] = new Vector2(1 / 64, 1);
-                    //UVs[j * 6 + 3] = new Vector2(1 / 64, 1);
-                    //UVs[j * 6 + 4] = new Vector2(1 / 64, 1);
-                    //UVs[j * 6 + 5] = new Vector2(1 / 64, 1);
-                }
-
-                HeatmapMeshes[i].uv = UVs;
-            }
-        }
-    }
-
-    public void UpdateUVsAtIndex(int indexMesh, int indexVertices)
-    {
+        float amountPedestrians = HeatmapData[indexMesh].amountPedestriansPerQuad[quadIndex];
         var currentUVs = HeatmapMeshes[indexMesh].uv;
+        int vertexStartIndex = quadIndex * 6;
+        //float xUV = 1f / 64f * (amountPedestrians / MaxPedestriansOnQuad) + 1f / 128f;
+        float xUV = 1f * (amountPedestrians / MaxPedestriansOnQuad) + 1f / 128f;
+
+        //if (xUV != 0 && xUV < 1f / 128f + 1f / 64f)
+        //{
+        //    xUV = 1f / 128f + 1f / 64f;
+        //} 
+        //if(amountPedestrians >= MaxPedestriansOnQuad)
+        //{
+        //    int debug = 1;
+        //}
+
         for (int i = 0; i < 6; i++)
         {
-            currentUVs[indexVertices++] = new Vector2(1, 1); //TODO: find rule for which color should be used, depending on the amount of pedestrians in quad
+            //float result = (amountPedestrians / MaxPedestriansOnQuad);
+            currentUVs[vertexStartIndex++] = new Vector2(xUV, 0); //texture is 64*1. you should always take the middle of the pixel!
+
         }
         HeatmapMeshes[indexMesh].uv = currentUVs;
     }
 
-
-    public bool TransmitPedestrianPosition(Vector3 position) //TODO: exception //TODO rename: transmit position oder so
+    public void RemoveOnePedestrian(int meshIndex, int quadIndex)
     {
+        this.HeatmapData[meshIndex].DecreaseAmountPedestrianAtIndex(quadIndex);
+        this.UpdateUVsAtIndex(meshIndex, quadIndex);
+    }
 
-        var resutingMeshIndexNullable = AffectedMeshIndex(position.y); 
-        int affectedMeshIndex; //TODO: with exception
+    public void AddOnePedestrian(int meshIndex, int quadIndex)
+    {
+        this.HeatmapData[meshIndex].IncreaseAmountPedestrianAtIndex(quadIndex);
+        this.UpdateUVsAtIndex(meshIndex, quadIndex);
+    }
+
+    public bool GetMeshAndQuadIndeces(Vector3 position, out int meshIndex, out int quadIndex)
+    {
+        var resutingMeshIndexNullable = AffectedMeshIndex(position.y);
         if (resutingMeshIndexNullable.HasValue)
         {
-            affectedMeshIndex = resutingMeshIndexNullable.Value;
+            meshIndex = resutingMeshIndexNullable.Value;
         }
         else
         {
+            meshIndex = -1;
+            quadIndex = -1;
             return false; //currently gets here if pedestrian is on stairs
         }
 
-        var affectedVerticesStartIndex = HeatmapData[affectedMeshIndex].getVertexIndexFromCoords(position.x, position.z, QuadSize);
-        if (affectedVerticesStartIndex == -1)
+        var affectedQuadIndex = HeatmapData[meshIndex].getQuadIndexFromCoords(position.x, position.z, QuadSize);
+        if (affectedQuadIndex == -1)
         {
+            meshIndex = -1;
+            quadIndex = -1;
             return false;
         }
-        UpdateUVsAtIndex(affectedMeshIndex, affectedVerticesStartIndex);
+        quadIndex = affectedQuadIndex;
         return true; //successfully updated
+
     }
 
     private int? AffectedMeshIndex(float pedestrianHeight) //TODO: exception
@@ -112,7 +98,7 @@ public class HeatmapHandler : MonoBehaviour
                 return i;
             }
         }
-        return null; //should hopefully never happen //happens, if pedestrian is on stairs
+        return null; //should hopefully never happen //happens, if pedestrian is on stairs...
     }
 
     public void AddToHeatmapMeshes(ref Mesh singleMesh)
@@ -120,24 +106,4 @@ public class HeatmapHandler : MonoBehaviour
         this.HeatmapMeshes.Add(singleMesh);
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-
-
-    }
-
-
-    // Update is called once per frame
-    void Update()
-    {
-        for (int i = 0; i < HeatmapData.Count; i++)
-        {
-            for (int j = 0; j < HeatmapData[i].amountPedestriansPerQuad.Length; j++)
-            {
-                HeatmapData[i].amountPedestriansPerQuad[j] = 0;
-            }
-        }
-        UpdateAllUVs();
-    }
 }

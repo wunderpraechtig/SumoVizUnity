@@ -10,7 +10,8 @@ public struct PedestrianEntity
     public float timeLatest;
     public PedestrianPoolObject poolObject;
 
-    public PedestrianEntity(int _id, List<PedestrianPosition> _positions) {
+    public PedestrianEntity(int _id, List<PedestrianPosition> _positions)
+    {
         id = _id;
         positions = _positions;
         lastTimeIndex = 0;
@@ -49,4 +50,6 @@ public struct PedestrianEntity
         }
         return -1;
     }
+
+
 }

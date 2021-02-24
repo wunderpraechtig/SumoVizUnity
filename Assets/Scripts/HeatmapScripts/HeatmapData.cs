@@ -33,6 +33,16 @@ public class HeatmapData
         }
     }
 
+    public void IncreaseAmountPedestrianAtIndex(int index)
+    {
+        this.amountPedestriansPerQuad[index] = this.amountPedestriansPerQuad[index] + 1;
+    }
+
+    public void DecreaseAmountPedestrianAtIndex(int index)
+    {
+        this.amountPedestriansPerQuad[index] = this.amountPedestriansPerQuad[index] -1;
+    }
+
     /// <summary>
     /// 
     /// </summary>
@@ -64,6 +74,29 @@ public class HeatmapData
         return resultingIndex * 6; // per quad we have 6 vertices - therefore we need to multiply the result with 6!
     }
 
+    public int getQuadIndexFromCoords(float xCoord, float zCoord, float quadSize) //TODO: rename since it also changes the list!, TODO: exception
+    {
+        if (xCoord < StartingPoint.x || xCoord > (StartingPoint.x + Width) || zCoord < (StartingPoint.z - Height) || zCoord > StartingPoint.z)
+        {
+            //return null; //in this case, the x and/or z Coord lies outside of the mesh. That actually shouldnt happen ..
+            return -1; //TODO: take care of this! happens in osloer
+        }
+
+        float distanceToLeftEdge = xCoord - StartingPoint.x;
+        int xOffset = (int)(distanceToLeftEdge / quadSize); //cast to int!
+
+        float distanceToTopEdge = StartingPoint.z - zCoord;
+        int zOffset = (int)(distanceToTopEdge / quadSize); //cast to int!
+
+
+        int resultingIndex = ((AmountQuadsWidth * zOffset) + xOffset);
+
+
+
+        //this.amountPedestriansPerQuad[resultingIndex] = this.amountPedestriansPerQuad[resultingIndex] + 1;
+
+        return resultingIndex; // per quad we have 6 vertices - therefore we need to multiply the result with 6!
+    }
     //private void Update()
     //{
     //    //reset pedestriancount every frame to 0 ??

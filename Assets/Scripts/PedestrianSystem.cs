@@ -13,6 +13,8 @@ public class PedestrianSystem : MonoBehaviour
     [SerializeField] private int densityRecalculationFrequency = 10;
     LinkedList<PedestrianPoolObject> pedestrianPool = new LinkedList<PedestrianPoolObject>();
     List<PedestrianEntity> pedestrianEntities = new List<PedestrianEntity>();
+    List<int> pedestrianEntitiesMeshIndex = new List<int>();
+    List<int> pedestrianEntitiesQuadIndex = new List<int>();
     [SerializeField] GameState gameState = null;
     List<Material> ColorStorage = new List<Material>();
     List<GameObject> trajectories = new List<GameObject>();
@@ -22,7 +24,8 @@ public class PedestrianSystem : MonoBehaviour
         gameState.isPlayingEvent += OnIsPlayingChanged;
         gameState.trajectoryModeEvent += OnShowTrajectoriesChanged;
 
-        for (int i = 0; i < initialPoolSize; ++i) {
+        for (int i = 0; i < initialPoolSize; ++i)
+        {
             CreatePoolObject();
         }
     }
@@ -31,21 +34,23 @@ public class PedestrianSystem : MonoBehaviour
     {
         foreach (var entry in pedestrianEntities)
         {
-            if(isPlaying)
+            if (isPlaying)
                 entry.poolObject.componentAnimation.Play();
             else
                 entry.poolObject.componentAnimation.Stop();
         }
     }
 
-    public void AddPedestrianEntity(PedestrianEntity entity) {
+    public void AddPedestrianEntity(PedestrianEntity entity)
+    {
         if (pedestrianPool.Count == 0) CreatePoolObject();
 
         PedestrianPoolObject poolObject = pedestrianPool.Last.Value;
         pedestrianPool.RemoveLast();
         entity.poolObject = poolObject;
         pedestrianEntities.Add(entity);
-
+        pedestrianEntitiesMeshIndex.Add(-1);
+        pedestrianEntitiesQuadIndex.Add(-1);
         if (gameState.IsPlaying)
             poolObject.componentAnimation.Play();
         else
@@ -53,15 +58,17 @@ public class PedestrianSystem : MonoBehaviour
         poolObject.obj.SetActive(true);
     }
 
-    public void ClearPedestrianEntities() {
-        foreach (var entry in pedestrianEntities) {
+    public void ClearPedestrianEntities()
+    {
+        foreach (var entry in pedestrianEntities)
+        {
             entry.poolObject.obj.SetActive(false);
             entry.poolObject.componentAnimation.Stop();
             pedestrianPool.AddLast(entry.poolObject);
         }
         pedestrianEntities.Clear();
     }
-    
+
     private void Update()
     {
         if (gameState.IsPlaying)
@@ -79,6 +86,8 @@ public class PedestrianSystem : MonoBehaviour
         float currentTime = gameState.CurrentTime;
         TileColoringMode tileColoringMode = gameState.PawnColoringMode;
         bool recalculateDensity = (Time.frameCount % densityRecalculationFrequency == 0);
+
+        int iterationNo = 0;
 
         foreach (var entity in pedestrianEntities)
         {
@@ -142,9 +151,35 @@ public class PedestrianSystem : MonoBehaviour
                 }
 
                 poolObject.obj.transform.localPosition = newPosition;
-                heatmapHandler.TransmitPedestrianPosition(newPosition); //ED: new //TODO:
+                if (true) //if heatmap stuff is shown in the simulation
+                {
+                    if (heatmapHandler.GetMeshAndQuadIndeces(newPosition, out int meshIndex, out int quadIndex)) //this is very costy. is true if pedestrian is on a floor quad
+                    {
+                        if (meshIndex != pedestrianEntitiesMeshIndex[iterationNo] || quadIndex != pedestrianEntitiesQuadIndex[iterationNo]) //is true if pedestrian is on another quad now
+                        {
+                            //take away a pedestrian from the old entity mesh and quad index
+                            if (-1 != pedestrianEntitiesMeshIndex[iterationNo] || -1 != pedestrianEntitiesQuadIndex[iterationNo])
+                            {
+                                heatmapHandler.RemoveOnePedestrian(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
+                            }
+                            heatmapHandler.AddOnePedestrian(meshIndex, quadIndex);
+                        }
+                        pedestrianEntitiesMeshIndex[iterationNo] = meshIndex;
+                        pedestrianEntitiesQuadIndex[iterationNo] = quadIndex;
+                    }
 
+                    else //pedestrian is on stairs or not in scene anymore
 
+                    {
+
+                        if (-1 != pedestrianEntitiesMeshIndex[iterationNo] || -1 != pedestrianEntitiesQuadIndex[iterationNo]) //if true: this pedestrian was on a quad previously
+                        {
+                            heatmapHandler.RemoveOnePedestrian(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
+                            pedestrianEntitiesMeshIndex[iterationNo] = -1;
+                            pedestrianEntitiesQuadIndex[iterationNo] = -1;
+                        }
+                    }
+                }
             }
             else
             {
@@ -152,6 +187,8 @@ public class PedestrianSystem : MonoBehaviour
                 poolObject.tileRenderer.enabled = false;
             }
             entity.poolObject.trajectoryRenderer.widthMultiplier = entity.poolObject.obj.transform.lossyScale.x;
+
+            iterationNo++;
         }
     }
 
@@ -162,9 +199,11 @@ public class PedestrianSystem : MonoBehaviour
         foreach (var entity in pedestrianEntities)
         {
 
-            if (current.id != entity.id) {
+            if (current.id != entity.id)
+            {
                 if (Vector3.Distance(current.poolObject.obj.transform.localPosition,
-                    entity.poolObject.obj.transform.localPosition) < radius) {
+                    entity.poolObject.obj.transform.localPosition) < radius)
+                {
                     nearbys++;
                 }
             }
@@ -173,12 +212,13 @@ public class PedestrianSystem : MonoBehaviour
         return density;
     }
 
-    private void CreatePoolObject() {
+    private void CreatePoolObject()
+    {
         GameObject gameObject = (GameObject)Instantiate(Resources.Load(pedestrianPrefab.name));
         gameObject.transform.parent = pedestrianParentObject.transform;
         gameObject.SetActive(false);
         PedestrianPoolObject poolObject = new PedestrianPoolObject(gameObject
-            , new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value), 
+            , new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value),
             pedestrianParentObject.transform);
         pedestrianPool.AddLast(poolObject);
     }
@@ -189,7 +229,7 @@ public class PedestrianSystem : MonoBehaviour
             foreach (var entry in pedestrianEntities)
             {
                 List<Vector3> points = new List<Vector3>();
-                
+
                 for (int i = 0; i < entry.positions.Count - 1; i++)
                 {
                     PedestrianPosition a = (PedestrianPosition)entry.positions[i];

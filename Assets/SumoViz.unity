@@ -507,6 +507,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   QuadSize: 5
+  MaxPedestriansOnQuad: 8
 --- !u!1 &158559338
 GameObject:
   m_ObjectHideFlags: 0
@@ -2634,6 +2635,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   QuadSize: 5
+  MaxPedestriansOnQuad: 0
 --- !u!1001 &417117748
 PrefabInstance:
   m_ObjectHideFlags: 0
