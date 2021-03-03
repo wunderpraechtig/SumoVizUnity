@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
@@ -230,10 +231,9 @@ public class FileLoader : MonoBehaviour
     {
 
         GameObject HeatmapStairs = new GameObject("HeatmapStairs"); //Mother Object
+        HeatmapStairs.transform.Translate(Vector3.up * 0.001f);
         HeatmapStairs.transform.parent = simulationObjects.transform;
 
-
-        //CreateCombinedMeshObject("StairsHeatmap", ref meshesStairs, 12, gl.theme.getWallsMaterial());
 
         for (int i = 0; i < meshesStairs.Count; i++)
         {
@@ -251,7 +251,6 @@ public class FileLoader : MonoBehaviour
             }
 
             List<Vector3> boundingBoxVertices = new List<Vector3>();
-            //Bounds
             int currentVertexIndex = 0;
             foreach (var entry in distinctVertices)
             {
@@ -282,80 +281,81 @@ public class FileLoader : MonoBehaviour
 
             }
 
-            Bounds boundingBox;
-          
-            //was brauche ich? x min Value, x Max value, und das gleiche für z und y
+            boundingBoxVertices = boundingBoxVertices.OrderBy(y => y.y).ToList<Vector3>();
+            List<Vector3> lowerEdge = new List<Vector3> { boundingBoxVertices[0], boundingBoxVertices[1] };
+            lowerEdge = lowerEdge.OrderBy(v => v.x).ToList<Vector3>();
+            List<Vector3> upperEdge = new List<Vector3> { boundingBoxVertices[2], boundingBoxVertices[3] };
+            upperEdge = upperEdge.OrderBy(v => v.x).ToList<Vector3>();
+            boundingBoxVertices.Clear();
+
+            boundingBoxVertices.Add(lowerEdge[0]);
+            boundingBoxVertices.Add(lowerEdge[1]);
+            boundingBoxVertices.Add(upperEdge[0]);
+            boundingBoxVertices.Add(upperEdge[1]);
+
+            Vector3 bottomLeft = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            Vector3 topLeft = new Vector3(float.MaxValue, float.MinValue, float.MinValue);
+            Vector3 topRight = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+            int farLeftIndex, nearLeftIndex;
+            if (boundingBoxVertices[0].z > boundingBoxVertices[2].z)
+            {
+                farLeftIndex = 0;
+                nearLeftIndex = 2;
+            }
+            else
+            {
+                farLeftIndex = 2;
+                nearLeftIndex = 0;
+            }
+
+            Vector3 nearLeft = boundingBoxVertices[nearLeftIndex];
+            Vector3 farLeft = boundingBoxVertices[farLeftIndex];
+            Vector3 farRight = boundingBoxVertices[farLeftIndex + 1];
 
 
-            //Mesh combinedMesh = CombineMeshes(ref meshes);
-            GameObject obj = new GameObject("StairsHeatmap" + (i + 1), typeof(MeshFilter), typeof(MeshRenderer));
-            obj.transform.parent = HeatmapStairs.transform;
-            MeshFilter mesh_filter = obj.GetComponent<MeshFilter>();
-            //mesh_filter.mesh = combinedMesh;
-            mesh_filter.mesh = meshesStairs[i];
-            //obj.GetComponent<Renderer>().material = mat;
-            obj.GetComponent<Renderer>().material = gl.theme.getWallsMaterial();
-            obj.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            obj.layer = 12;
-            //obj.layer = layer;
-            obj.transform.localPosition = new Vector3(0, 0, 0);
-            obj.transform.localScale = Vector3.one;
-            obj.transform.localRotation = Quaternion.Euler(0, 0, 0);
-            //return obj;
+            GameObject heatmapMesh = new GameObject("StairsHeatmap" + (i + 1), typeof(MeshFilter), typeof(MeshRenderer));
+            heatmapMesh.transform.parent = HeatmapStairs.transform;
+            MeshFilter mesh_filter = heatmapMesh.GetComponent<MeshFilter>();
+
+
+            int[] trianglesNew;
+
+            var result = RecalculateVerticesAndIndecesForMesh(farLeft, farRight, nearLeft, 1, out trianglesNew);
+
+
+
+            mesh_filter.mesh.vertices = result;
+
+
+            mesh_filter.mesh.triangles = trianglesNew;
+
+
+
+            Vector2[] uvs = new Vector2[mesh_filter.mesh.vertices.Length];
+            for (int j = 0; j < uvs.Length; j++)
+            {
+                //uvs[i] = new Vector2(1f / 128f + 1f / 64f, 0); // the uv coordinate 1f / 128f + 1f / 64f is the first green pixel of the texture
+                uvs[j] = new Vector2(0, 0); // the uv coordinate 0,0 is a transparent part of the texture
+            }
+
+
+            mesh_filter.mesh.uv = uvs;
+            
+            Mesh meshOfFilter = mesh_filter.mesh;
+
+            heatmapHandler.AddToHeatmapMeshes(ref meshOfFilter);
+
+            heatmapMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
+            heatmapMesh.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            heatmapMesh.layer = 11;
+            heatmapMesh.transform.localPosition = new Vector3(0, 0, 0);
+            heatmapMesh.transform.localScale = Vector3.one;
+            heatmapMesh.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
+
 
         }
-        //int meshNo = 0;
-        ////////////////////////////////////
-        /////
-        ////for debugging purposes: this code instantiates all submeshes of the big floors mesh
 
-        //for(int i=0; i<meshesStairs.Count; i++)
-        //{
-        //    var currentMesh = meshesStairs[i];
-
-        //    GameObject heatmapFloors = CreateCombinedMeshObject("HeatmapFloor" + (++meshNo), ref currentMesh, 11, gl.theme.getFloorMaterial());
-        //    heatmapFloors.transform.parent = HeatmapStairs.transform;
-        //    heatmapFloors.AddComponent<MeshCollider>();
-        //    MeshFilter tmpFilter = (MeshFilter)heatmapFloors.GetComponent("MeshFilter");
-
-        //}
-
-
-
-
-
-
-
-
-        ////////////////////////////
-        //Dictionary<float, List<Mesh>> meshesOnSameLevel = new Dictionary<float, List<Mesh>>();
-
-        //for (int i = 0; i < meshesStairs.Count; i++)
-        //{
-        //    Mesh currentMesh = meshesStairs[i];
-        //    float currentYValue = currentMesh.vertices[0].y; //it shouldnt matter whether vertices[0], vertices[1] or vertices[2] is taken, since they all should have the same y value
-
-        //    if (!meshesOnSameLevel.ContainsKey(currentYValue))
-        //    {
-        //        meshesOnSameLevel[currentYValue] = new List<Mesh>();
-        //    }
-        //    meshesOnSameLevel[currentYValue].Add(currentMesh);
-        //}
-
-        //foreach (var entry in meshesOnSameLevel)
-        //{
-
-
-        //    var key = entry.Key;
-        //    var value = entry.Value;
-
-        //    //for debugging purposes: this code instantiates all submeshes of the big floors mesh that are on the same level(?)
-        //    GameObject heatmapFloors = CreateCombinedMeshObject("HeatmapFloor" + (++meshNo), ref value, 11, gl.theme.getFloorMaterial());
-        //    heatmapFloors.transform.parent = HeatmapStairs.transform;
-        //    heatmapFloors.AddComponent<MeshCollider>();
-        //    MeshFilter tmpFilter = (MeshFilter)heatmapFloors.GetComponent("MeshFilter");
-
-        //}
     }
 
     private void CreateFloorsForHeatmap(ref List<Mesh> meshesFloor)
@@ -363,6 +363,7 @@ public class FileLoader : MonoBehaviour
         // List<float> yValues = new List<float>();
 
         GameObject HeatmapFloors = new GameObject("HeatmapFloors"); //Mother Object
+        HeatmapFloors.transform.Translate(Vector3.up * 0.001f);
 
         HeatmapFloors.transform.parent = simulationObjects.transform;
 
@@ -407,15 +408,20 @@ public class FileLoader : MonoBehaviour
 
 
             //var result = RecalculateVerticesAndIndecesForMesh(meshBounds, heatmapHandler.QuadSize, out trianglesNew);
-            var result = RecalculateVerticesAndIndecesForMeshDifferentHeights(meshBounds, heatmapHandler.QuadSize, out trianglesNew);
+            //var result1 = RecalculateVerticesAndIndecesForMeshDifferentHeights(meshBounds, heatmapHandler.QuadSize, out trianglesNew);
+            var topleft = new Vector3(meshBounds.min.x, meshBounds.max.y, meshBounds.max.z);
+            var topright = meshBounds.max;
+            var bottomleft = meshBounds.min;
+            var result = RecalculateVerticesAndIndecesForMesh(topleft, topright, bottomleft, heatmapHandler.QuadSize, out trianglesNew);
+
+            //PlainMeshGenerator gen = new PlainMeshGenerator();
+
+            //mesh_filter2.mesh = gen.generatePlainRectangularMesh(topleft, topright, bottomleft, heatmapHandler.QuadSize);
+
 
 
             mesh_filter2.mesh.vertices = result;
-
-
             mesh_filter2.mesh.triangles = trianglesNew;
-
-
 
             Vector2[] uvs = new Vector2[mesh_filter2.mesh.vertices.Length];
             for (int i = 0; i < uvs.Length; i++)
@@ -423,7 +429,6 @@ public class FileLoader : MonoBehaviour
                 //uvs[i] = new Vector2(1f / 128f + 1f / 64f, 0); // the uv coordinate 1f / 128f + 1f / 64f is the first green pixel of the texture
                 uvs[i] = new Vector2(0, 0); // the uv coordinate 0,0 is a transparent part of the texture
             }
-
 
             mesh_filter2.mesh.uv = uvs;
             Mesh meshOfFilter = mesh_filter2.mesh;
@@ -439,7 +444,7 @@ public class FileLoader : MonoBehaviour
         }
 
     }
-
+    /*
     private Vector3[] RecalculateVerticesAndIndecesForMesh(Bounds boundingBox, float size, out int[] triangles) //, Vector3[] oldVertices)
     {
 
@@ -558,11 +563,11 @@ public class FileLoader : MonoBehaviour
         return newVertices;
 
     }
-
+    */
     private Vector3[] RecalculateVerticesAndIndecesForMeshDifferentHeights(Bounds boundingBox, float size, out int[] triangles) //, Vector3[] oldVertices)
     {
 
-
+        //vector berechnen von oben links nach oben rechts und dann die länge davon nehmen für breite
         float width = boundingBox.size.x; //get the width of the bounding box (BB)
         float length = boundingBox.size.z; //get the length of the BB
         float height = boundingBox.size.y;
@@ -577,8 +582,9 @@ public class FileLoader : MonoBehaviour
 
         float sizeEdgeQuadsX = width - (amountQuadsWidth * size);
         float sizeEdgeQuadsZ = length - (amountQuadsLength * size);
-        float heightEdgeQuads = sizeEdgeQuadsZ / length * height; //height of the edge quads
-        float heightQuads = height - heightEdgeQuads; //remaining height for normal quads
+        float heightEdgeQuadsRatio = sizeEdgeQuadsZ / length; //ratio edge z Quads to total length --> equals ratio of height edge quads to total height!
+        float heightEdgeQuads = heightEdgeQuadsRatio * height; //height of the edge quads
+        float heightQuads = (height - heightEdgeQuads) / (float)amountQuadsLength; //remaining height for single normal quads
 
         //how many vertices will there be in the end? per quad we have 3*2 vertices (3 vertices per triangle, and we need 2 triangles per quad because every single vertex can have a different uv coordinate!)
         int amountVertices = amountQuadsWidth * 6 * amountQuadsLength;
@@ -675,6 +681,146 @@ public class FileLoader : MonoBehaviour
             triangles[i] = i;
         }
         startingPoint = new Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.max.z);
+        //fill in all the information into the HeatmapHandler
+        HeatmapData heatmapData = new HeatmapData(startingPoint, width, length, roundedUpWidth, roundedUpLength);
+        heatmapHandler.AddToHeatmapData(heatmapData);
+
+        return newVertices;
+
+    }
+
+    private Vector3[] RecalculateVerticesAndIndecesForMesh(Vector3 topLeftVector, Vector3 topRightVector, Vector3 bottomLeftVector, float size, out int[] triangles) //, Vector3[] oldVertices)
+    {
+        //topLeftVector.y += 0.1f;
+        //topRightVector.y += 0.1f;
+        //bottomLeftVector.y += 0.1f;
+
+        Vector3 widthVector = topRightVector - topLeftVector;
+        Vector3 widthVectorNormalized = (topRightVector - topLeftVector).normalized;
+        Vector3 lengthVector = bottomLeftVector - topLeftVector;
+        Vector3 lengthVectorNormalized = (bottomLeftVector - topLeftVector).normalized;
+        //vector berechnen von oben links nach oben rechts und dann die länge davon nehmen für breite //TODO delete
+        float width = widthVector.magnitude; //get the width 
+        float length = lengthVector.magnitude; //get the length
+        float height = (bottomLeftVector.y - topLeftVector.y); //TODO: falsch! nur y values?!
+
+        //how many quads fit into width/length?
+        float amountQuadsWidthFloat = width / size;
+        float amountQuadsLengthFloat = length / size;
+        int amountQuadsWidth = (int)amountQuadsWidthFloat; //rounding down
+        int amountQuadsLength = (int)amountQuadsLengthFloat; //rounding down
+        int roundedUpWidth = (int)Mathf.Ceil(amountQuadsWidthFloat);
+        int roundedUpLength = (int)Mathf.Ceil(amountQuadsLengthFloat);
+
+        float sizeEdgeQuadsX = width - (amountQuadsWidth * size);
+        float sizeEdgeQuadsZ = length - (amountQuadsLength * size);
+        float heightEdgeQuadsRatio = sizeEdgeQuadsZ / length; //ratio edge z Quads to total length --> equals ratio of height edge quads to total height!
+        float heightEdgeQuads = heightEdgeQuadsRatio * height; //height of the edge quads
+        float heightQuads = (height - heightEdgeQuads) / (float)amountQuadsLength; //remaining height for single normal quads
+
+        //how many vertices will there be in the end? per quad we have 3*2 vertices (3 vertices per triangle, and we need 2 triangles per quad because every single vertex can have a different uv coordinate!)
+        int amountVertices = amountQuadsWidth * 6 * amountQuadsLength;
+
+        if (sizeEdgeQuadsX != 0)
+        {
+            amountVertices += amountQuadsLength * 6; //on the width side there is one more quad per quad along the length
+
+        }
+        if (sizeEdgeQuadsZ != 0)
+        {
+            amountVertices += amountQuadsWidth * 6; //on the length side: one more quad per quad along the width, and if there is an edge quad along the length -> one more quad
+            if (sizeEdgeQuadsX != 0)
+            {
+                amountVertices += 6; //add 2 more triangles
+            }
+        }
+
+        Vector3[] newVertices = new Vector3[amountVertices];
+        triangles = new int[amountVertices]; //also 6 entries per quad
+        Vector3 startingPoint = topLeftVector; //take top left of the bounding box
+
+        int currentVertex = 0;
+
+        for (int i = 0; i < amountQuadsLength; i++) //rows
+        {
+            for (int j = 0; j < amountQuadsWidth; j++) //columns within a row
+            {
+
+                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized + size * lengthVectorNormalized; //bottomright vertex 
+                newVertices[currentVertex++] = startingPoint + size * lengthVectorNormalized; //bottomleft vertex
+
+                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized; //topright vertex
+                newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized + size * lengthVectorNormalized; ; //bottomright vertex
+
+                startingPoint = startingPoint + size * widthVectorNormalized; //TODO: davor length vector, ist width richtig korrigiert?
+            }
+
+            if (sizeEdgeQuadsX != 0)
+            {
+                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized + size * lengthVectorNormalized; //bottomright vertex 
+                newVertices[currentVertex++] = startingPoint + size * lengthVectorNormalized; //bottomleft vertex
+
+                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized; //topright vertex
+                newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized + size * lengthVectorNormalized; ; //bottomright vertex
+
+
+            }
+
+            //startingPoint.x = boundingBox.min.x; //TODOO --> normalize in the end
+            //startingPoint.z -= size;
+            //startingPoint.y -= heightQuads;
+
+            startingPoint = topLeftVector + size * (i + 1) * lengthVectorNormalized; //TODO: muss ich jetzt height nicht mehr berücksichtigen, weil ich entlang der realen koordinaten gehe??
+        }
+
+        //look whether a last row of not fully sized quads is needed
+        if (sizeEdgeQuadsZ != 0)
+        {
+            int startIndex = amountVertices - (amountQuadsWidth * 6); //or do it with currentVertex!
+            if (sizeEdgeQuadsX != 0)
+            {
+                startIndex -= 6;
+            }
+            for (int i = 0; i < amountQuadsWidth; i++)
+            {
+
+                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized + sizeEdgeQuadsZ * lengthVectorNormalized; //bottomright vertex 
+                newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsZ * lengthVectorNormalized; //bottomleft vertex
+
+                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized; //topright vertex
+                newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized + sizeEdgeQuadsZ * lengthVectorNormalized; ; //bottomright vertex
+
+
+                //startingPoint.x += size;
+
+                startingPoint = startingPoint + size * widthVectorNormalized;
+
+            }
+            if (sizeEdgeQuadsX != 0)
+            {
+                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized + sizeEdgeQuadsZ * lengthVectorNormalized; //bottomright vertex 
+                newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsZ * lengthVectorNormalized; //bottomleft vertex
+
+                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized; //topright vertex
+                newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized + sizeEdgeQuadsZ * lengthVectorNormalized; ; //bottomright vertex
+
+
+            }
+        }
+
+        for (int i = 0; i < amountVertices; i++)
+        {
+            triangles[i] = i;
+        }
+        startingPoint = topLeftVector;
         //fill in all the information into the HeatmapHandler
         HeatmapData heatmapData = new HeatmapData(startingPoint, width, length, roundedUpWidth, roundedUpLength);
         heatmapHandler.AddToHeatmapData(heatmapData);

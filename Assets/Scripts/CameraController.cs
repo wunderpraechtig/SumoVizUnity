@@ -10,7 +10,7 @@ public class CameraController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
@@ -20,7 +20,10 @@ public class CameraController : MonoBehaviour
 
         float h = horizontalSpeed * Input.GetAxis("Mouse X");
         float v = -1 * verticalSpeed * Input.GetAxis("Mouse Y");
-        transform.Rotate(v, h, 0);
+        //transform.Rotate(v, h, 0); //rotates along z as well - wrong!
+        transform.Rotate(new Vector3(0, h, 0), Space.World); //Left-right
+        transform.Rotate(new Vector3(v, 0, 0)); //up-down
+
         Vector3 input = Quaternion.Euler(gameObject.transform.eulerAngles.x, gameObject.transform.eulerAngles.y, 0) * new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
         transform.position += input;
 

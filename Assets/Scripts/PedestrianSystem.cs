@@ -151,7 +151,7 @@ public class PedestrianSystem : MonoBehaviour
                 }
 
                 poolObject.obj.transform.localPosition = newPosition;
-                if (true) //if heatmap stuff is shown in the simulation
+                if (true) //if heatmap stuff is shown in the simulation //TODO!
                 {
                     if (heatmapHandler.GetMeshAndQuadIndeces(newPosition, out int meshIndex, out int quadIndex)) //this is very costy. is true if pedestrian is on a floor quad
                     {
