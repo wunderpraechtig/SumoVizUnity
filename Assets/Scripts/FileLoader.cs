@@ -320,7 +320,9 @@ public class FileLoader : MonoBehaviour
 
             int[] trianglesNew;
 
-            var result = RecalculateVerticesAndIndecesForMesh(farLeft, farRight, nearLeft, 1, out trianglesNew);
+            var result = RecalculateVerticesAndIndecesForMesh(farLeft, farRight, nearLeft, 1, out trianglesNew, out HeatmapData heatmapData);
+
+            heatmapHandler.AddToStairsHeatmapData(heatmapData);
 
 
 
@@ -336,6 +338,7 @@ public class FileLoader : MonoBehaviour
             {
                 //uvs[i] = new Vector2(1f / 128f + 1f / 64f, 0); // the uv coordinate 1f / 128f + 1f / 64f is the first green pixel of the texture
                 uvs[j] = new Vector2(0, 0); // the uv coordinate 0,0 is a transparent part of the texture
+                //uvs[j] = new Vector2(1, 0); // the uv coordinate 0,0 is a transparent part of the texture
             }
 
 
@@ -343,7 +346,7 @@ public class FileLoader : MonoBehaviour
             
             Mesh meshOfFilter = mesh_filter.mesh;
 
-            heatmapHandler.AddToHeatmapMeshes(ref meshOfFilter);
+            heatmapHandler.AddToStairHeatmapMeshes(ref meshOfFilter);
 
             heatmapMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
             heatmapMesh.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -412,8 +415,10 @@ public class FileLoader : MonoBehaviour
             var topleft = new Vector3(meshBounds.min.x, meshBounds.max.y, meshBounds.max.z);
             var topright = meshBounds.max;
             var bottomleft = meshBounds.min;
-            var result = RecalculateVerticesAndIndecesForMesh(topleft, topright, bottomleft, heatmapHandler.QuadSize, out trianglesNew);
+            var result = RecalculateVerticesAndIndecesForMesh(topleft, topright, bottomleft, heatmapHandler.QuadSize, out trianglesNew, out HeatmapData heatmapData);
 
+
+            heatmapHandler.AddToFloorsHeatmapData(heatmapData);
             //PlainMeshGenerator gen = new PlainMeshGenerator();
 
             //mesh_filter2.mesh = gen.generatePlainRectangularMesh(topleft, topright, bottomleft, heatmapHandler.QuadSize);
@@ -433,7 +438,7 @@ public class FileLoader : MonoBehaviour
             mesh_filter2.mesh.uv = uvs;
             Mesh meshOfFilter = mesh_filter2.mesh;
 
-            heatmapHandler.AddToHeatmapMeshes(ref meshOfFilter);
+            heatmapHandler.AddToFloorHeatmapMeshes(ref meshOfFilter);
 
             realHeatmapMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
             realHeatmapMesh.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -444,252 +449,8 @@ public class FileLoader : MonoBehaviour
         }
 
     }
-    /*
-    private Vector3[] RecalculateVerticesAndIndecesForMesh(Bounds boundingBox, float size, out int[] triangles) //, Vector3[] oldVertices)
-    {
 
-
-        float width = boundingBox.size.x; //get the width of the bounding box (BB)
-        float height = boundingBox.size.z; //get the height of the BB
-
-        //how many quads fit into width/height?
-        float amountQuadsWidthFloat = width / size;
-        float amountQuadsHeightFloat = height / size;
-        int amountQuadsWidth = (int)amountQuadsWidthFloat; //rounding down
-        int amountQuadsHeight = (int)amountQuadsHeightFloat; //rounding down
-        int roundedUpWidth = (int)Mathf.Ceil(amountQuadsWidthFloat);
-        int roundedUpHeight = (int)Mathf.Ceil(amountQuadsHeightFloat);
-
-        float sizeEdgeQuadsX = width - (amountQuadsWidth * size);
-        float sizeEdgeQuadsZ = height - (amountQuadsHeight * size);
-
-        //how many vertices will there be in the end? per quad we have 3*2 vertices (3 vertices per triangle, and we need 2 triangles per quad because every single vertex can have a different uv coordinate!)
-        int amountVertices = amountQuadsWidth * 6 * amountQuadsHeight;
-
-        if (sizeEdgeQuadsX != 0)
-        {
-            amountVertices += amountQuadsHeight * 6; //on the width side there is one more quad per quad along the height
-
-        }
-        if (sizeEdgeQuadsZ != 0)
-        {
-            amountVertices += amountQuadsWidth * 6; //on the height side: one more quad per quad along the width, and if there is an edge quad along the height -> one more quad
-            if (sizeEdgeQuadsX != 0)
-            {
-                amountVertices += 6; //add 2 more triangles
-            }
-        }
-
-        Vector3[] newVertices = new Vector3[amountVertices];
-        triangles = new int[amountVertices]; //also 6 entries per quad
-        Vector3 startingPoint = new Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.max.z); //take top left of the bounding box
-
-        int currentVertex = 0;
-
-        for (int i = 0; i < amountQuadsHeight; i++)
-        {
-            for (int j = 0; j < amountQuadsWidth; j++)
-            {
-                newVertices[currentVertex++] = startingPoint; //topleft vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - size); //bottomright vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - size); //bottomleft vertex
-
-                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z); //topright vertex
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - size); //bottomright vertex
-
-                startingPoint.x += size;
-            }
-
-            if (sizeEdgeQuadsX != 0)
-            {
-                newVertices[currentVertex++] = startingPoint; //topleft vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - size); //bottomright vertex
-                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - size); //bottomleft vertex
-
-                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z); //topright vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - size); //bottomright vertex 
-
-            }
-
-            startingPoint.x = boundingBox.min.x;
-            startingPoint.z -= size;
-        }
-
-        //look whether a last row of not fully sized quads is needed
-        if (sizeEdgeQuadsZ != 0)
-        {
-            int startIndex = amountVertices - (amountQuadsWidth * 6); //or do it with currentVertex!
-            if (sizeEdgeQuadsX != 0)
-            {
-                startIndex -= 6;
-            }
-            for (int i = 0; i < amountQuadsWidth; i++)
-            {
-
-                newVertices[startIndex++] = startingPoint; //topleft vertex
-                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex
-                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomleft vertex 
-
-                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z); //topright vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex
-
-                startingPoint.x += size;
-
-            }
-            if (sizeEdgeQuadsX != 0)
-            {
-                newVertices[startIndex++] = startingPoint; //topleft vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomleft vertex 
-
-                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z); //topright vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex 
-            }
-        }
-
-        for (int i = 0; i < amountVertices; i++)
-        {
-            triangles[i] = i;
-        }
-        startingPoint = new Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.max.z);
-        //fill in all the information into the HeatmapHandler
-        HeatmapData heatmapData = new HeatmapData(startingPoint, width, height, roundedUpWidth, roundedUpHeight);
-        heatmapHandler.AddToHeatmapData(heatmapData);
-
-        return newVertices;
-
-    }
-    */
-    private Vector3[] RecalculateVerticesAndIndecesForMeshDifferentHeights(Bounds boundingBox, float size, out int[] triangles) //, Vector3[] oldVertices)
-    {
-
-        //vector berechnen von oben links nach oben rechts und dann die länge davon nehmen für breite
-        float width = boundingBox.size.x; //get the width of the bounding box (BB)
-        float length = boundingBox.size.z; //get the length of the BB
-        float height = boundingBox.size.y;
-
-        //how many quads fit into width/length?
-        float amountQuadsWidthFloat = width / size;
-        float amountQuadsLengthFloat = length / size;
-        int amountQuadsWidth = (int)amountQuadsWidthFloat; //rounding down
-        int amountQuadsLength = (int)amountQuadsLengthFloat; //rounding down
-        int roundedUpWidth = (int)Mathf.Ceil(amountQuadsWidthFloat);
-        int roundedUpLength = (int)Mathf.Ceil(amountQuadsLengthFloat);
-
-        float sizeEdgeQuadsX = width - (amountQuadsWidth * size);
-        float sizeEdgeQuadsZ = length - (amountQuadsLength * size);
-        float heightEdgeQuadsRatio = sizeEdgeQuadsZ / length; //ratio edge z Quads to total length --> equals ratio of height edge quads to total height!
-        float heightEdgeQuads = heightEdgeQuadsRatio * height; //height of the edge quads
-        float heightQuads = (height - heightEdgeQuads) / (float)amountQuadsLength; //remaining height for single normal quads
-
-        //how many vertices will there be in the end? per quad we have 3*2 vertices (3 vertices per triangle, and we need 2 triangles per quad because every single vertex can have a different uv coordinate!)
-        int amountVertices = amountQuadsWidth * 6 * amountQuadsLength;
-
-        if (sizeEdgeQuadsX != 0)
-        {
-            amountVertices += amountQuadsLength * 6; //on the width side there is one more quad per quad along the length
-
-        }
-        if (sizeEdgeQuadsZ != 0)
-        {
-            amountVertices += amountQuadsWidth * 6; //on the length side: one more quad per quad along the width, and if there is an edge quad along the length -> one more quad
-            if (sizeEdgeQuadsX != 0)
-            {
-                amountVertices += 6; //add 2 more triangles
-            }
-        }
-
-        Vector3[] newVertices = new Vector3[amountVertices];
-        triangles = new int[amountVertices]; //also 6 entries per quad
-        Vector3 startingPoint = new Vector3(boundingBox.min.x, boundingBox.max.y, boundingBox.max.z); //take top left of the bounding box
-
-        int currentVertex = 0;
-
-        for (int i = 0; i < amountQuadsLength; i++) //rows
-        {
-            for (int j = 0; j < amountQuadsWidth; j++) //columns within a row
-            {
-
-                newVertices[currentVertex++] = startingPoint; //topleft vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + size, startingPoint.y - heightQuads, startingPoint.z - size); //bottomright vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y - heightQuads, startingPoint.z - size); //bottomleft vertex
-
-                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z); //topright vertex
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + size, startingPoint.y - heightQuads, startingPoint.z - size); //bottomright vertex
-
-                startingPoint.x += size;
-            }
-
-            if (sizeEdgeQuadsX != 0)
-            {
-                newVertices[currentVertex++] = startingPoint; //topleft vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y - heightQuads, startingPoint.z - size); //bottomright vertex
-                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y - heightQuads, startingPoint.z - size); //bottomleft vertex
-
-                newVertices[currentVertex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z); //topright vertex 
-                newVertices[currentVertex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y - heightQuads, startingPoint.z - size); //bottomright vertex 
-
-            }
-
-            startingPoint.x = boundingBox.min.x;
-            startingPoint.z -= size;
-            startingPoint.y -= heightQuads;
-        }
-
-        //look whether a last row of not fully sized quads is needed
-        if (sizeEdgeQuadsZ != 0)
-        {
-            int startIndex = amountVertices - (amountQuadsWidth * 6); //or do it with currentVertex!
-            if (sizeEdgeQuadsX != 0)
-            {
-                startIndex -= 6;
-            }
-            for (int i = 0; i < amountQuadsWidth; i++)
-            {
-
-                newVertices[startIndex++] = startingPoint; //topleft vertex
-                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y - heightEdgeQuads, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex
-                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y - heightEdgeQuads, startingPoint.z - sizeEdgeQuadsZ); //bottomleft vertex 
-
-                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y, startingPoint.z); //topright vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x + size, startingPoint.y - heightEdgeQuads, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex
-
-                startingPoint.x += size;
-
-            }
-            if (sizeEdgeQuadsX != 0)
-            {
-                newVertices[startIndex++] = startingPoint; //topleft vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y - heightEdgeQuads, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y - heightEdgeQuads, startingPoint.z - sizeEdgeQuadsZ); //bottomleft vertex 
-
-                newVertices[startIndex++] = new Vector3(startingPoint.x, startingPoint.y, startingPoint.z); //topleft vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y, startingPoint.z); //topright vertex 
-                newVertices[startIndex++] = new Vector3(startingPoint.x + sizeEdgeQuadsX, startingPoint.y - heightEdgeQuads, startingPoint.z - sizeEdgeQuadsZ); //bottomright vertex 
-            }
-        }
-
-        for (int i = 0; i < amountVertices; i++)
-        {
-            triangles[i] = i;
-        }
-        startingPoint = new Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.max.z);
-        //fill in all the information into the HeatmapHandler
-        HeatmapData heatmapData = new HeatmapData(startingPoint, width, length, roundedUpWidth, roundedUpLength);
-        heatmapHandler.AddToHeatmapData(heatmapData);
-
-        return newVertices;
-
-    }
-
-    private Vector3[] RecalculateVerticesAndIndecesForMesh(Vector3 topLeftVector, Vector3 topRightVector, Vector3 bottomLeftVector, float size, out int[] triangles) //, Vector3[] oldVertices)
+    private Vector3[] RecalculateVerticesAndIndecesForMesh(Vector3 topLeftVector, Vector3 topRightVector, Vector3 bottomLeftVector, float size, out int[] triangles, out HeatmapData heatmapData) //, Vector3[] oldVertices)
     {
         //topLeftVector.y += 0.1f;
         //topRightVector.y += 0.1f;
@@ -822,8 +583,7 @@ public class FileLoader : MonoBehaviour
         }
         startingPoint = topLeftVector;
         //fill in all the information into the HeatmapHandler
-        HeatmapData heatmapData = new HeatmapData(startingPoint, width, length, roundedUpWidth, roundedUpLength);
-        heatmapHandler.AddToHeatmapData(heatmapData);
+        heatmapData = new HeatmapData(startingPoint, widthVector, lengthVector, topRightVector, bottomLeftVector,  width, length, roundedUpWidth, roundedUpLength);
 
         return newVertices;
 

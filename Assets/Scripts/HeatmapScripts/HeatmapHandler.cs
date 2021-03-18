@@ -5,10 +5,10 @@ using UnityEngine;
 public class HeatmapHandler : MonoBehaviour
 {
     private List<Mesh> FloorHeatmapMeshes;
-    private List<HeatmapData> FloorHeatmapData;    
+    private List<HeatmapData> FloorHeatmapData;
     private List<Mesh> StairsHeatmapMeshes;
     private List<HeatmapData> StairsHeatmapData;
-    private float PedestrianHeightTolerance;
+    //private float PedestrianHeightTolerance;
 
     public float QuadSize;
     public float MaxPedestriansOnQuad;
@@ -17,19 +17,35 @@ public class HeatmapHandler : MonoBehaviour
     {
         FloorHeatmapMeshes = new List<Mesh>();
         FloorHeatmapData = new List<HeatmapData>();
-        this.PedestrianHeightTolerance = 0.01f;
+        StairsHeatmapMeshes = new List<Mesh>();
+        StairsHeatmapData = new List<HeatmapData>();
+        //this.PedestrianHeightTolerance = 0.01f;
+    }
+    public void AddToFloorHeatmapMeshes(ref Mesh singleMesh)
+    {
+        this.FloorHeatmapMeshes.Add(singleMesh);
+    }
+    public void AddToStairHeatmapMeshes(ref Mesh singleMesh)
+    {
+        this.StairsHeatmapMeshes.Add(singleMesh);
     }
 
-
-    public void AddToHeatmapData(HeatmapData data)
+    public void AddToFloorsHeatmapData(HeatmapData data)
     {
         this.FloorHeatmapData.Add(data);
 
     }
-    private void UpdateUVsAtIndex(int indexMesh, int quadIndex) //update UV entsprechend pedestriancount erhöhen!
+
+    public void AddToStairsHeatmapData(HeatmapData data)
     {
-        float amountPedestrians = FloorHeatmapData[indexMesh].amountPedestriansPerQuad[quadIndex];
-        var currentUVs = FloorHeatmapMeshes[indexMesh].uv;
+        this.StairsHeatmapData.Add(data);
+
+    }
+
+    private void UpdateUVsAtIndex(ref List<HeatmapData> heatmapData, ref List<Mesh> meshes, int indexMesh, int quadIndex) //update UV entsprechend pedestriancount erhöhen!
+    {
+        float amountPedestrians = heatmapData[indexMesh].amountPedestriansPerQuad[quadIndex];
+        var currentUVs = meshes[indexMesh].uv;
         int vertexStartIndex = quadIndex * 6;
         //float xUV = 1f / 64f * (amountPedestrians / MaxPedestriansOnQuad) + 1f / 128f;
         float xUV = 1f * (amountPedestrians / MaxPedestriansOnQuad) + 1f / 128f;
@@ -49,24 +65,36 @@ public class HeatmapHandler : MonoBehaviour
             currentUVs[vertexStartIndex++] = new Vector2(xUV, 0); //texture is 64*1. you should always take the middle of the pixel!
 
         }
-        FloorHeatmapMeshes[indexMesh].uv = currentUVs;
+        meshes[indexMesh].uv = currentUVs;
     }
 
-    public void RemoveOnePedestrian(int meshIndex, int quadIndex)
+    public void RemoveOnePedestrianFromFloorMesh(int floorMeshIndex, int quadIndex)
     {
-        this.FloorHeatmapData[meshIndex].DecreaseAmountPedestrianAtIndex(quadIndex);
-        this.UpdateUVsAtIndex(meshIndex, quadIndex);
+        this.FloorHeatmapData[floorMeshIndex].DecreaseAmountPedestrianAtIndex(quadIndex);
+        this.UpdateUVsAtIndex(ref this.FloorHeatmapData, ref this.FloorHeatmapMeshes, floorMeshIndex, quadIndex);
     }
 
-    public void AddOnePedestrian(int meshIndex, int quadIndex)
+    public void AddOnePedestrianToFloorMesh(int floorMeshIndex, int quadIndex)
     {
-        this.FloorHeatmapData[meshIndex].IncreaseAmountPedestrianAtIndex(quadIndex);
-        this.UpdateUVsAtIndex(meshIndex, quadIndex);
+        this.FloorHeatmapData[floorMeshIndex].IncreaseAmountPedestrianAtIndex(quadIndex);
+        this.UpdateUVsAtIndex(ref this.FloorHeatmapData, ref this.FloorHeatmapMeshes, floorMeshIndex, quadIndex);
+    }
+    public void RemoveOnePedestrianFromStairMesh(int stairMeshIndex, int quadIndex)
+    {
+        this.StairsHeatmapData[stairMeshIndex].DecreaseAmountPedestrianAtIndex(quadIndex);
+        this.UpdateUVsAtIndex(ref this.StairsHeatmapData, ref this.StairsHeatmapMeshes, stairMeshIndex, quadIndex);
     }
 
-    public bool GetMeshAndQuadIndeces(Vector3 position, out int meshIndex, out int quadIndex)
+    public void AddOnePedestrianToStairMesh(int stairMeshIndex, int quadIndex)
     {
-        var resutingMeshIndexNullable = AffectedMeshIndex(position.y);
+        this.StairsHeatmapData[stairMeshIndex].IncreaseAmountPedestrianAtIndex(quadIndex);
+        this.UpdateUVsAtIndex(ref this.StairsHeatmapData, ref this.StairsHeatmapMeshes, stairMeshIndex, quadIndex);
+    }
+
+    public bool GetFloorMeshAndQuadIndeces(Vector3 position, out int meshIndex, out int quadIndex)
+    {
+        //var resutingMeshIndexNullable = AffectedMeshIndex(position.y);
+        var resutingMeshIndexNullable = AffectedFloorMeshIndexByHeight(position);
         if (resutingMeshIndexNullable.HasValue)
         {
             meshIndex = resutingMeshIndexNullable.Value;
@@ -75,37 +103,55 @@ public class HeatmapHandler : MonoBehaviour
         {
             meshIndex = -1;
             quadIndex = -1;
-            return false; //currently gets here if pedestrian is on stairs
+            return false; //currently also gets here if pedestrian is on stairs
         }
 
-        var affectedQuadIndex = FloorHeatmapData[meshIndex].getQuadIndexFromCoords(position.x, position.z, QuadSize);
-        if (affectedQuadIndex == -1)
+        var affectedMeshQuadIndex = FloorHeatmapData[meshIndex].GetQuadIndexFromCoords(position, QuadSize);
+        if (affectedMeshQuadIndex == -1)
         {
             meshIndex = -1;
             quadIndex = -1;
             return false;
         }
-        quadIndex = affectedQuadIndex;
+        quadIndex = affectedMeshQuadIndex;
         return true; //successfully updated
 
     }
 
-    private int? AffectedMeshIndex(float pedestrianHeight) //TODO: exception
+
+
+
+
+    public bool GetAffectedStairIndex(Vector3 newPosition, out int stairIndex, out int quadIndex) //Since multiple stairs can be on the same height we have to do the other checks directly (not only check for candidates)
+    {
+        //1. potential stair by comparing y value (min max, it has to be in between)
+        for (int i = 0; i < StairsHeatmapMeshes.Count; i++)
+        {
+            if (newPosition.y >= this.StairsHeatmapMeshes[i].bounds.min.y && newPosition.y <= this.StairsHeatmapMeshes[i].bounds.max.y) //fitting stair candidate
+            {
+                var resultingIndex = this.StairsHeatmapData[i].GetQuadIndexFromCoords(newPosition, 1); //TODO: hardcoded size, fix!
+                if (resultingIndex != -1) 
+                {
+                    quadIndex = resultingIndex;
+                    stairIndex = i;
+                    return true;
+                }
+            }
+        }
+        quadIndex = -1;
+        stairIndex = -1;
+        return false;
+    }
+
+    private int? AffectedFloorMeshIndexByHeight(Vector3 pedestrianPosition) //TODO: exception?
     {
         for (int i = 0; i < this.FloorHeatmapMeshes.Count; i++)
         {
-            var heightCurrentMesh = this.FloorHeatmapMeshes[i].vertices[0].y;
-            if (pedestrianHeight < heightCurrentMesh + PedestrianHeightTolerance && pedestrianHeight > heightCurrentMesh - PedestrianHeightTolerance) //if true, pedestrian ist most probably within this mesh
+            if (this.FloorHeatmapData[i].MeshIsOnSameHeight(pedestrianPosition)) //if true, pedestrian ist most probably within this mesh (height fits, x and z need to be tested though)
             {
                 return i;
             }
         }
-        return null; //should hopefully never happen //happens, if pedestrian is on stairs...
+        return null; //should hopefully never happen //edit: happens, if pedestrian is on stairs...
     }
-
-    public void AddToHeatmapMeshes(ref Mesh singleMesh)
-    {
-        this.FloorHeatmapMeshes.Add(singleMesh);
-    }
-
 }
