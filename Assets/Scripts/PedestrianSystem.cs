@@ -153,7 +153,7 @@ public class PedestrianSystem : MonoBehaviour
                 poolObject.obj.transform.localPosition = newPosition;
                 if (true) //if heatmap stuff is shown in the simulation //TODO!
                 {
-                    if (heatmapHandler.GetFloorMeshAndQuadIndeces(newPosition, out int meshIndex, out int quadIndex)) //this is very costy. is true if pedestrian is on a floor quad
+                    if (heatmapHandler.GetAffectedIndeces(newPosition, out int meshIndex, out int quadIndex)) //this is very costy. is true if pedestrian is on a floor quad
                     {
                         if (meshIndex != pedestrianEntitiesMeshIndex[iterationNo] || quadIndex != pedestrianEntitiesQuadIndex[iterationNo]) //is true if pedestrian is on another quad now then before
                         {
@@ -161,18 +161,20 @@ public class PedestrianSystem : MonoBehaviour
                             if (-1 != pedestrianEntitiesMeshIndex[iterationNo] || -1 != pedestrianEntitiesQuadIndex[iterationNo])
                             {
                                 //if yes take away one pedestrian from the old entity mesh and quad index
-                                heatmapHandler.RemoveOnePedestrianFromFloorMesh(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
+                                heatmapHandler.RemoveOnePedestrianFromMesh(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
+                                //heatmapHandler.RemoveOnePedestrianFromFloorMesh(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
                             }
-                            heatmapHandler.AddOnePedestrianToFloorMesh(meshIndex, quadIndex);
+                            heatmapHandler.AddOnePedestrianToMesh(meshIndex, quadIndex);
+                            //heatmapHandler.AddOnePedestrianToFloorMesh(meshIndex, quadIndex);
                         }
                         pedestrianEntitiesMeshIndex[iterationNo] = meshIndex;
                         pedestrianEntitiesQuadIndex[iterationNo] = quadIndex;
                     }
 
-                    else if (heatmapHandler.GetAffectedStairIndex(newPosition, out int stairIndex, out int quadIndexStair)) //if pedestrian is on stairs
-                    {
-                        heatmapHandler.AddOnePedestrianToStairMesh(stairIndex, quadIndexStair);
-                    }
+                    //else if (heatmapHandler.GetAffectedStairIndex(newPosition, out int stairIndex, out int quadIndexStair)) //if pedestrian is on stairs
+                    //{
+                    //    heatmapHandler.AddOnePedestrianToStairMesh(stairIndex, quadIndexStair);
+                    //}
 
                     else //pedestrian is on stairs or not in scene anymore
 
@@ -180,7 +182,8 @@ public class PedestrianSystem : MonoBehaviour
 
                         if (-1 != pedestrianEntitiesMeshIndex[iterationNo] || -1 != pedestrianEntitiesQuadIndex[iterationNo]) //if true: this pedestrian was on a quad previously
                         {
-                            heatmapHandler.RemoveOnePedestrianFromFloorMesh(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
+                            //heatmapHandler.RemoveOnePedestrianFromFloorMesh(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
+                            heatmapHandler.RemoveOnePedestrianFromMesh(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
                             pedestrianEntitiesMeshIndex[iterationNo] = -1;
                             pedestrianEntitiesQuadIndex[iterationNo] = -1;
                         }

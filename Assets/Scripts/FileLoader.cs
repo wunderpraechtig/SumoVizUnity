@@ -283,34 +283,69 @@ public class FileLoader : MonoBehaviour
 
             boundingBoxVertices = boundingBoxVertices.OrderBy(y => y.y).ToList<Vector3>();
             List<Vector3> lowerEdge = new List<Vector3> { boundingBoxVertices[0], boundingBoxVertices[1] };
-            lowerEdge = lowerEdge.OrderBy(v => v.x).ToList<Vector3>();
+            //lowerEdge = lowerEdge.OrderBy(v => v.x).ToList<Vector3>();
             List<Vector3> upperEdge = new List<Vector3> { boundingBoxVertices[2], boundingBoxVertices[3] };
-            upperEdge = upperEdge.OrderBy(v => v.x).ToList<Vector3>();
-            boundingBoxVertices.Clear();
+            //upperEdge = upperEdge.OrderBy(v => v.x).ToList<Vector3>();
+            //boundingBoxVertices.Clear();
 
-            boundingBoxVertices.Add(lowerEdge[0]);
-            boundingBoxVertices.Add(lowerEdge[1]);
-            boundingBoxVertices.Add(upperEdge[0]);
-            boundingBoxVertices.Add(upperEdge[1]);
+            //boundingBoxVertices.Add(lowerEdge[0]);
+            //boundingBoxVertices.Add(lowerEdge[1]);
+            //boundingBoxVertices.Add(upperEdge[0]);
+            //boundingBoxVertices.Add(upperEdge[1]);
 
-            Vector3 bottomLeft = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-            Vector3 topLeft = new Vector3(float.MaxValue, float.MinValue, float.MinValue);
-            Vector3 topRight = new Vector3(float.MinValue, float.MinValue, float.MinValue);
-            int farLeftIndex, nearLeftIndex;
-            if (boundingBoxVertices[0].z > boundingBoxVertices[2].z)
+            //Vector3 bottomLeft = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            //Vector3 topLeft = new Vector3(float.MaxValue, float.MinValue, float.MinValue);
+            //Vector3 topRight = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+            //int farLeftIndex, nearLeftIndex;
+            Vector3 nearLeft = new Vector3();
+            Vector3 farLeft = new Vector3();
+            Vector3 farRight = new Vector3();
+
+            if (upperEdge[0].x == upperEdge[1].x) //then order by z, because if x is the same value along the top and bot edge it doesnt help us to find out how to align the corners of the quad
             {
-                farLeftIndex = 0;
-                nearLeftIndex = 2;
+                lowerEdge = lowerEdge.OrderBy(v => v.z).ToList<Vector3>();
+                upperEdge = upperEdge.OrderBy(v => v.z).ToList<Vector3>();
+
+                if (lowerEdge[0].x > upperEdge[0].x) //if the bottom of the stair starts on the right (bigger x value), then top left of the quad has a smaller z value
+                {
+                    farLeft = upperEdge[0];
+                    farRight = upperEdge[1];
+                    nearLeft = lowerEdge[0];
+                }
+                else if (lowerEdge[0].x < upperEdge[0].x)// if bottom of stairs is left compared to the top of the stairs, then topleft has the bigger z value
+                {
+                    farLeft = upperEdge[1];
+                    farRight = upperEdge[0];
+                    nearLeft = lowerEdge[1];
+                }
             }
+            //else if (z == z -> order by x
             else
             {
-                farLeftIndex = 2;
-                nearLeftIndex = 0;
+                lowerEdge = lowerEdge.OrderBy(v => v.x).ToList<Vector3>();
+                upperEdge = upperEdge.OrderBy(v => v.x).ToList<Vector3>();
+
+                if (lowerEdge[0].z > upperEdge[0].z)
+                {
+                    //farLeftIndex = 0;
+                    //nearLeftIndex = 2;                
+                    farLeft = lowerEdge[0];
+                    farRight = lowerEdge[1];
+                    nearLeft = upperEdge[0];
+                }
+                else
+                {
+                    //farLeftIndex = 2;
+                    //nearLeftIndex = 0;
+                    farLeft = upperEdge[0];
+                    farRight = upperEdge[1];
+                    nearLeft = lowerEdge[0];
+                }
             }
 
-            Vector3 nearLeft = boundingBoxVertices[nearLeftIndex];
-            Vector3 farLeft = boundingBoxVertices[farLeftIndex];
-            Vector3 farRight = boundingBoxVertices[farLeftIndex + 1];
+            //Vector3 nearLeft = boundingBoxVertices[nearLeftIndex];
+            //Vector3 farLeft = boundingBoxVertices[farLeftIndex];
+            //Vector3 farRight = boundingBoxVertices[farLeftIndex + 1];
 
 
             GameObject heatmapMesh = new GameObject("StairsHeatmap" + (i + 1), typeof(MeshFilter), typeof(MeshRenderer));
@@ -320,9 +355,10 @@ public class FileLoader : MonoBehaviour
 
             int[] trianglesNew;
 
-            var result = RecalculateVerticesAndIndecesForMesh(farLeft, farRight, nearLeft, 1, out trianglesNew, out HeatmapData heatmapData);
+            var result = RecalculateVerticesAndIndecesForMesh(farLeft, farRight, nearLeft, heatmapHandler.StairQuadSize, out trianglesNew, out HeatmapData heatmapData);
 
-            heatmapHandler.AddToStairsHeatmapData(heatmapData);
+            heatmapHandler.AddToHeatmapData(heatmapData);
+            //heatmapHandler.AddToStairsHeatmapData(heatmapData);
 
 
 
@@ -343,10 +379,11 @@ public class FileLoader : MonoBehaviour
 
 
             mesh_filter.mesh.uv = uvs;
-            
+
             Mesh meshOfFilter = mesh_filter.mesh;
 
-            heatmapHandler.AddToStairHeatmapMeshes(ref meshOfFilter);
+            heatmapHandler.AddToHeatmapMeshes(ref meshOfFilter);
+            //heatmapHandler.AddToStairHeatmapMeshes(ref meshOfFilter);
 
             heatmapMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
             heatmapMesh.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -415,10 +452,11 @@ public class FileLoader : MonoBehaviour
             var topleft = new Vector3(meshBounds.min.x, meshBounds.max.y, meshBounds.max.z);
             var topright = meshBounds.max;
             var bottomleft = meshBounds.min;
-            var result = RecalculateVerticesAndIndecesForMesh(topleft, topright, bottomleft, heatmapHandler.QuadSize, out trianglesNew, out HeatmapData heatmapData);
+            var result = RecalculateVerticesAndIndecesForMesh(topleft, topright, bottomleft, heatmapHandler.FloorQuadSize, out trianglesNew, out HeatmapData heatmapData);
 
 
-            heatmapHandler.AddToFloorsHeatmapData(heatmapData);
+            heatmapHandler.AddToHeatmapData(heatmapData);
+            //heatmapHandler.AddToFloorsHeatmapData(heatmapData);
             //PlainMeshGenerator gen = new PlainMeshGenerator();
 
             //mesh_filter2.mesh = gen.generatePlainRectangularMesh(topleft, topright, bottomleft, heatmapHandler.QuadSize);
@@ -438,7 +476,8 @@ public class FileLoader : MonoBehaviour
             mesh_filter2.mesh.uv = uvs;
             Mesh meshOfFilter = mesh_filter2.mesh;
 
-            heatmapHandler.AddToFloorHeatmapMeshes(ref meshOfFilter);
+            heatmapHandler.AddToHeatmapMeshes(ref meshOfFilter);
+            //heatmapHandler.AddToFloorHeatmapMeshes(ref meshOfFilter);
 
             realHeatmapMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
             realHeatmapMesh.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -583,7 +622,7 @@ public class FileLoader : MonoBehaviour
         }
         startingPoint = topLeftVector;
         //fill in all the information into the HeatmapHandler
-        heatmapData = new HeatmapData(startingPoint, widthVector, lengthVector, topRightVector, bottomLeftVector,  width, length, roundedUpWidth, roundedUpLength);
+        heatmapData = new HeatmapData(startingPoint, widthVector, lengthVector, topRightVector, bottomLeftVector, width, length, roundedUpWidth, roundedUpLength, size);
 
         return newVertices;
 

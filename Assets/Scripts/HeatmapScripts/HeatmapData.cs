@@ -17,9 +17,10 @@ public class HeatmapData
     private int AmountQuadsWidth, AmountQuadsHeight; // amount of quads with considering the potential edge quads
     public int[] amountPedestriansPerQuad;
     private float PedestrianHeightTolerance;
+    private float quadSize;
 
 
-    public HeatmapData(Vector3 startingPoint, Vector3 widthVector, Vector3 lengthVector, Vector3 farRight, Vector3 nearLeft, float width, float length, int amountsQuadWidth, int amountQuadsHeight)
+    public HeatmapData(Vector3 startingPoint, Vector3 widthVector, Vector3 lengthVector, Vector3 farRight, Vector3 nearLeft, float width, float length, int amountsQuadWidth, int amountQuadsHeight, float quadSize)
     {
         //this.PedestrianCount = 0;
         this.StartingPoint = startingPoint;
@@ -32,9 +33,10 @@ public class HeatmapData
         this.Length = length;
         this.AmountQuadsWidth = amountsQuadWidth;
         this.AmountQuadsHeight = amountQuadsHeight;
+        this.quadSize = quadSize;
         int totalAmountQuads = AmountQuadsWidth * AmountQuadsHeight;
         this.amountPedestriansPerQuad = new int[totalAmountQuads];
-        this.PedestrianHeightTolerance = 0.001f;
+        this.PedestrianHeightTolerance = 0.01f;
         for (int i = 0; i < totalAmountQuads; i++)
         {
             amountPedestriansPerQuad[i] = 0;
@@ -76,10 +78,10 @@ public class HeatmapData
 
 
         float distanceToLeftEdge = xCoord - StartingPoint.x;
-        int xOffset = (int)(distanceToLeftEdge / quadSize); //cast to int!
+        int xOffset = (int)(distanceToLeftEdge / this.quadSize); //cast to int!
 
         float distanceToTopEdge = StartingPoint.z - zCoord;
-        int zOffset = (int)(distanceToTopEdge / quadSize); //cast to int!
+        int zOffset = (int)(distanceToTopEdge / this.quadSize); //cast to int!
 
 
         int resultingIndex = ((AmountQuadsWidth * zOffset) + xOffset);
@@ -89,7 +91,7 @@ public class HeatmapData
         return resultingIndex; // per quad we have 6 vertices - therefore we need to multiply the result with 6!
     }
 
-    public int GetQuadIndexFromCoords(Vector3 position, float quadSize) //TODO: rename since it also changes the list!, TODO: exception
+    public int GetQuadIndexFromCoords(Vector3 position) //TODO: rename since it also changes the list!, TODO: exception
     {
         float farthestZCoord = StartingPoint.z >= FarRight.z ? StartingPoint.z : FarRight.z;
         float leftMostXCoord = StartingPoint.x <= NearLeft.x ? StartingPoint.x : NearLeft.x;
@@ -102,6 +104,7 @@ public class HeatmapData
         //important first step: position needs to be put relative to starting point!!!
 
         Vector3 movedPosition = position - StartingPoint;
+        //Vector3 movedPosition2 = StartingPoint - position;
 
         Vector3 projectionWidth = Vector3.Project(movedPosition, WidthVector);
         Vector3 projectionLength = Vector3.Project(movedPosition, LengthVector);
@@ -111,8 +114,8 @@ public class HeatmapData
             return -1;
         }
 
-        int xOffset = (int)(projectionWidth.magnitude / quadSize); //cast to int!
-        int zOffset = (int)(projectionLength.magnitude / quadSize); //cast to int!
+        int xOffset = (int)(projectionWidth.magnitude / this.quadSize); //cast to int!
+        int zOffset = (int)(projectionLength.magnitude / this.quadSize); //cast to int!
 
         int resultingIndex = ((AmountQuadsWidth * zOffset) + xOffset);
 
@@ -131,28 +134,28 @@ public class HeatmapData
 
         return resultingIndex; // per quad we have 6 vertices - therefore we need to multiply the result with 6!
     }
-    public int GetQuadIndexFromCoordsStairs(Vector3 position, float quadSize) //TODO: rename since it also changes the list!, TODO: exception
-    {
+    //public int GetQuadIndexFromCoordsStairs(Vector3 position, float quadSize) //TODO: rename since it also changes the list!, TODO: exception
+    //{
 
 
-        float farthestZCoord;
-        farthestZCoord = StartingPoint.z >= FarRight.z ? StartingPoint.z : FarRight.z;
-        if (position.x < StartingPoint.x || position.z > farthestZCoord) //if it is not within these, its definitely not in the plane of the stair
-        {
-            //return null; //in this case, the x and/or z Coord lies outside of the mesh. That actually shouldnt happen ..
-            return -1; //TODO: take care of this! happens in osloer
-        }
+    //    float farthestZCoord;
+    //    farthestZCoord = StartingPoint.z >= FarRight.z ? StartingPoint.z : FarRight.z;
+    //    if (position.x < StartingPoint.x || position.z > farthestZCoord) //if it is not within these, its definitely not in the plane of the stair
+    //    {
+    //        //return null; //in this case, the x and/or z Coord lies outside of the mesh. That actually shouldnt happen ..
+    //        return -1; //TODO: take care of this! happens in osloer
+    //    }
 
 
-        Vector3 projectionWidth = Vector3.Project(position, WidthVector);
-        Vector3 projectionLength = Vector3.Project(position, LengthVector);
+    //    Vector3 projectionWidth = Vector3.Project(position, WidthVector);
+    //    Vector3 projectionLength = Vector3.Project(position, LengthVector);
 
-        if(projectionWidth.magnitude > Width || projectionLength.magnitude > Length)
-        {
-            //we are outside of this mesh
-        }
+    //    if(projectionWidth.magnitude > Width || projectionLength.magnitude > Length)
+    //    {
+    //        //we are outside of this mesh
+    //    }
 
-        return 0;
-    }
+    //    return 0;
+    //}
 
 }

@@ -506,7 +506,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e9a41aecbcc38b4bb9e85724a42f989, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  QuadSize: 1.5
+  FloorQuadSize: 1
+  StairQuadSize: 1
   MaxPedestriansOnQuad: 4
 --- !u!1 &158559338
 GameObject:
@@ -2634,7 +2635,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e9a41aecbcc38b4bb9e85724a42f989, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  QuadSize: 5
+  FloorQuadSize: 0
+  StairQuadSize: 0
   MaxPedestriansOnQuad: 0
 --- !u!1001 &417117748
 PrefabInstance:
