@@ -283,20 +283,8 @@ public class FileLoader : MonoBehaviour
 
             boundingBoxVertices = boundingBoxVertices.OrderBy(y => y.y).ToList<Vector3>();
             List<Vector3> lowerEdge = new List<Vector3> { boundingBoxVertices[0], boundingBoxVertices[1] };
-            //lowerEdge = lowerEdge.OrderBy(v => v.x).ToList<Vector3>();
             List<Vector3> upperEdge = new List<Vector3> { boundingBoxVertices[2], boundingBoxVertices[3] };
-            //upperEdge = upperEdge.OrderBy(v => v.x).ToList<Vector3>();
-            //boundingBoxVertices.Clear();
 
-            //boundingBoxVertices.Add(lowerEdge[0]);
-            //boundingBoxVertices.Add(lowerEdge[1]);
-            //boundingBoxVertices.Add(upperEdge[0]);
-            //boundingBoxVertices.Add(upperEdge[1]);
-
-            //Vector3 bottomLeft = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-            //Vector3 topLeft = new Vector3(float.MaxValue, float.MinValue, float.MinValue);
-            //Vector3 topRight = new Vector3(float.MinValue, float.MinValue, float.MinValue);
-            //int farLeftIndex, nearLeftIndex;
             Vector3 nearLeft = new Vector3();
             Vector3 farLeft = new Vector3();
             Vector3 farRight = new Vector3();
@@ -319,7 +307,6 @@ public class FileLoader : MonoBehaviour
                     nearLeft = lowerEdge[1];
                 }
             }
-            //else if (z == z -> order by x
             else
             {
                 lowerEdge = lowerEdge.OrderBy(v => v.x).ToList<Vector3>();
@@ -327,26 +314,17 @@ public class FileLoader : MonoBehaviour
 
                 if (lowerEdge[0].z > upperEdge[0].z)
                 {
-                    //farLeftIndex = 0;
-                    //nearLeftIndex = 2;                
                     farLeft = lowerEdge[0];
                     farRight = lowerEdge[1];
                     nearLeft = upperEdge[0];
                 }
                 else
                 {
-                    //farLeftIndex = 2;
-                    //nearLeftIndex = 0;
                     farLeft = upperEdge[0];
                     farRight = upperEdge[1];
                     nearLeft = lowerEdge[0];
                 }
             }
-
-            //Vector3 nearLeft = boundingBoxVertices[nearLeftIndex];
-            //Vector3 farLeft = boundingBoxVertices[farLeftIndex];
-            //Vector3 farRight = boundingBoxVertices[farLeftIndex + 1];
-
 
             GameObject heatmapMesh = new GameObject("StairsHeatmap" + (i + 1), typeof(MeshFilter), typeof(MeshRenderer));
             heatmapMesh.transform.parent = HeatmapStairs.transform;
@@ -374,7 +352,6 @@ public class FileLoader : MonoBehaviour
             {
                 //uvs[i] = new Vector2(1f / 128f + 1f / 64f, 0); // the uv coordinate 1f / 128f + 1f / 64f is the first green pixel of the texture
                 uvs[j] = new Vector2(0, 0); // the uv coordinate 0,0 is a transparent part of the texture
-                //uvs[j] = new Vector2(1, 0); // the uv coordinate 0,0 is a transparent part of the texture
             }
 
 
@@ -400,8 +377,6 @@ public class FileLoader : MonoBehaviour
 
     private void CreateFloorsForHeatmap(ref List<Mesh> meshesFloor)
     {
-        // List<float> yValues = new List<float>();
-
         GameObject HeatmapFloors = new GameObject("HeatmapFloors"); //Mother Object
         HeatmapFloors.transform.Translate(Vector3.up * 0.001f);
 
@@ -447,8 +422,6 @@ public class FileLoader : MonoBehaviour
             int[] trianglesNew;
 
 
-            //var result = RecalculateVerticesAndIndecesForMesh(meshBounds, heatmapHandler.QuadSize, out trianglesNew);
-            //var result1 = RecalculateVerticesAndIndecesForMeshDifferentHeights(meshBounds, heatmapHandler.QuadSize, out trianglesNew);
             var topleft = new Vector3(meshBounds.min.x, meshBounds.max.y, meshBounds.max.z);
             var topright = meshBounds.max;
             var bottomleft = meshBounds.min;
@@ -518,28 +491,30 @@ public class FileLoader : MonoBehaviour
         float heightEdgeQuads = heightEdgeQuadsRatio * height; //height of the edge quads
         float heightQuads = (height - heightEdgeQuads) / (float)amountQuadsLength; //remaining height for single normal quads
 
-        //how many vertices will there be in the end? per quad we have 3*2 vertices (3 vertices per triangle, and we need 2 triangles per quad because every single vertex can have a different uv coordinate!)
-        int amountVertices = amountQuadsWidth * 6 * amountQuadsLength;
+        //how many vertices will there be in the end? per quad we have 4 vertices (3 vertices per triangle, but 2 vertices are common in both triangles and we need 2 triangles per quad)
+        int amountVertices = amountQuadsWidth * 4 * amountQuadsLength;
 
         if (sizeEdgeQuadsX != 0)
         {
-            amountVertices += amountQuadsLength * 6; //on the width side there is one more quad per quad along the length
+            amountVertices += amountQuadsLength * 4; //on the width side there is one more quad per quad along the length
 
         }
         if (sizeEdgeQuadsZ != 0)
         {
-            amountVertices += amountQuadsWidth * 6; //on the length side: one more quad per quad along the width, and if there is an edge quad along the length -> one more quad
+            amountVertices += amountQuadsWidth * 4; //on the length side: one more quad per quad along the width, and if there is an edge quad along the length -> one more quad
             if (sizeEdgeQuadsX != 0)
             {
-                amountVertices += 6; //add 2 more triangles
+                amountVertices += 4; //add 2 more triangles
             }
         }
 
         Vector3[] newVertices = new Vector3[amountVertices];
-        triangles = new int[amountVertices]; //also 6 entries per quad
+        triangles = new int[amountVertices+(amountVertices/2)]; //6 entries per quad
         Vector3 startingPoint = topLeftVector; //take top left of the bounding box
 
         int currentVertex = 0;
+        int currentTriangle = 0;
+        int currentTriangleSetNo = 0;
 
         for (int i = 0; i < amountQuadsLength; i++) //rows
         {
@@ -550,9 +525,17 @@ public class FileLoader : MonoBehaviour
                 newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized + size * lengthVectorNormalized; //bottomright vertex 
                 newVertices[currentVertex++] = startingPoint + size * lengthVectorNormalized; //bottomleft vertex
 
-                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                //newVertices[currentVertex++] = startingPoint; //topleft vertex 
                 newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized; //topright vertex
-                newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized + size * lengthVectorNormalized; ; //bottomright vertex
+                //newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized + size * lengthVectorNormalized; ; //bottomright vertex
+
+                triangles[currentTriangle++] = 0 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 1 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 2 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 0 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 3 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 1 + (currentTriangleSetNo * 4);
+                currentTriangleSetNo++;
 
                 startingPoint = startingPoint + size * widthVectorNormalized; //TODO: davor length vector, ist width richtig korrigiert?
             }
@@ -563,11 +546,17 @@ public class FileLoader : MonoBehaviour
                 newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized + size * lengthVectorNormalized; //bottomright vertex 
                 newVertices[currentVertex++] = startingPoint + size * lengthVectorNormalized; //bottomleft vertex
 
-                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                //newVertices[currentVertex++] = startingPoint; //topleft vertex 
                 newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized; //topright vertex
-                newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized + size * lengthVectorNormalized; ; //bottomright vertex
+                                                                                                       //newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized + size * lengthVectorNormalized; ; //bottomright vertex
 
-
+                triangles[currentTriangle++] = 0 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 1 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 2 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 0 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 3 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 1 + (currentTriangleSetNo * 4);
+                currentTriangleSetNo++;
             }
 
             //startingPoint.x = boundingBox.min.x; //TODOO --> normalize in the end
@@ -580,10 +569,10 @@ public class FileLoader : MonoBehaviour
         //look whether a last row of not fully sized quads is needed
         if (sizeEdgeQuadsZ != 0)
         {
-            int startIndex = amountVertices - (amountQuadsWidth * 6); //or do it with currentVertex!
+            int startIndex = amountVertices - (amountQuadsWidth * 4); //or do it with currentVertex!
             if (sizeEdgeQuadsX != 0)
             {
-                startIndex -= 6;
+                startIndex -= 4;
             }
             for (int i = 0; i < amountQuadsWidth; i++)
             {
@@ -592,10 +581,16 @@ public class FileLoader : MonoBehaviour
                 newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized + sizeEdgeQuadsZ * lengthVectorNormalized; //bottomright vertex 
                 newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsZ * lengthVectorNormalized; //bottomleft vertex
 
-                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                //newVertices[currentVertex++] = startingPoint; //topleft vertex 
                 newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized; //topright vertex
-                newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized + sizeEdgeQuadsZ * lengthVectorNormalized; ; //bottomright vertex
-
+                                                                                             //newVertices[currentVertex++] = startingPoint + size * widthVectorNormalized + sizeEdgeQuadsZ * lengthVectorNormalized; ; //bottomright vertex
+                triangles[currentTriangle++] = 0 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 1 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 2 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 0 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 3 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 1 + (currentTriangleSetNo * 4);
+                currentTriangleSetNo++;
 
                 //startingPoint.x += size;
 
@@ -608,18 +603,25 @@ public class FileLoader : MonoBehaviour
                 newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized + sizeEdgeQuadsZ * lengthVectorNormalized; //bottomright vertex 
                 newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsZ * lengthVectorNormalized; //bottomleft vertex
 
-                newVertices[currentVertex++] = startingPoint; //topleft vertex 
+                //newVertices[currentVertex++] = startingPoint; //topleft vertex 
                 newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized; //topright vertex
-                newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized + sizeEdgeQuadsZ * lengthVectorNormalized; ; //bottomright vertex
-
+                                                                                                       //newVertices[currentVertex++] = startingPoint + sizeEdgeQuadsX * widthVectorNormalized + sizeEdgeQuadsZ * lengthVectorNormalized; ; //bottomright vertex
+                triangles[currentTriangle++] = 0 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 1 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 2 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 0 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 3 + (currentTriangleSetNo * 4);
+                triangles[currentTriangle++] = 1 + (currentTriangleSetNo * 4);
+                currentTriangleSetNo++;
 
             }
         }
 
-        for (int i = 0; i < amountVertices; i++)
-        {
-            triangles[i] = i;
-        }
+        //for (int i = 0; i < amountVertices; i++)
+        //{
+        //    //0,1,2 and then 0,3,1
+        //    triangles[i] = i;
+        //}
         startingPoint = topLeftVector;
         //fill in all the information into the HeatmapHandler
         heatmapData = new HeatmapData(startingPoint, widthVector, lengthVector, topRightVector, bottomLeftVector, width, length, roundedUpWidth, roundedUpLength, size);
