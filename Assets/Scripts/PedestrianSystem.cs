@@ -161,11 +161,11 @@ public class PedestrianSystem : MonoBehaviour
                             if (-1 != pedestrianEntitiesMeshIndex[iterationNo] || -1 != pedestrianEntitiesQuadIndex[iterationNo])
                             {
                                 //if yes take away one pedestrian from the old entity mesh and quad index
-                                heatmapHandler.RemoveOnePedestrianFromMesh(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
-                                //heatmapHandler.RemoveOnePedestrianFromFloorMesh(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
+                                //heatmapHandler.RemoveOnePedestrianFromMeshAndQuad(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
+                                heatmapHandler.RemovePedestriansFromMultipleQuads(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
                             }
-                            heatmapHandler.AddOnePedestrianToMesh(meshIndex, quadIndex);
-                            //heatmapHandler.AddOnePedestrianToFloorMesh(meshIndex, quadIndex);
+                            //heatmapHandler.AddOnePedestrianToMeshAndQuad(meshIndex, quadIndex);
+                            heatmapHandler.AddPedestrianToMultipleQuads(meshIndex, quadIndex);
                         }
                         pedestrianEntitiesMeshIndex[iterationNo] = meshIndex;
                         pedestrianEntitiesQuadIndex[iterationNo] = quadIndex;
@@ -176,14 +176,15 @@ public class PedestrianSystem : MonoBehaviour
                     //    heatmapHandler.AddOnePedestrianToStairMesh(stairIndex, quadIndexStair);
                     //}
 
-                    else //pedestrian is on stairs or not in scene anymore
+                    else //pedestrian is on stairs or not in scene anymore //old
 
                     {
 
                         if (-1 != pedestrianEntitiesMeshIndex[iterationNo] || -1 != pedestrianEntitiesQuadIndex[iterationNo]) //if true: this pedestrian was on a quad previously
                         {
                             //heatmapHandler.RemoveOnePedestrianFromFloorMesh(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
-                            heatmapHandler.RemoveOnePedestrianFromMesh(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
+                            //heatmapHandler.RemoveOnePedestrianFromMeshAndQuad(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
+                            heatmapHandler.RemovePedestriansFromMultipleQuads(pedestrianEntitiesMeshIndex[iterationNo], pedestrianEntitiesQuadIndex[iterationNo]);
                             pedestrianEntitiesMeshIndex[iterationNo] = -1;
                             pedestrianEntitiesQuadIndex[iterationNo] = -1;
                         }

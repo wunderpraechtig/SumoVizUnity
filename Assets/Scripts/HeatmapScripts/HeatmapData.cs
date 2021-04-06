@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -15,9 +16,10 @@ public class HeatmapData
     private Plane plane;
     private float Width, Length;
     private int AmountQuadsWidth, AmountQuadsHeight; // amount of quads with considering the potential edge quads
-    public int[] amountPedestriansPerQuad;
+    public float[] amountPedestriansPerQuad;
     private float PedestrianHeightTolerance;
     private float quadSize;
+
 
 
     public HeatmapData(Vector3 startingPoint, Vector3 widthVector, Vector3 lengthVector, Vector3 farRight, Vector3 nearLeft, float width, float length, int amountsQuadWidth, int amountQuadsHeight, float quadSize)
@@ -35,12 +37,114 @@ public class HeatmapData
         this.AmountQuadsHeight = amountQuadsHeight;
         this.quadSize = quadSize;
         int totalAmountQuads = AmountQuadsWidth * AmountQuadsHeight;
-        this.amountPedestriansPerQuad = new int[totalAmountQuads];
+        this.amountPedestriansPerQuad = new float[totalAmountQuads];
         this.PedestrianHeightTolerance = 0.01f;
         for (int i = 0; i < totalAmountQuads; i++)
         {
             amountPedestriansPerQuad[i] = 0;
         }
+    }
+
+    public List<int> IncreaseAmountPedestrianAtIndexAndSurrounding(int centerQuadIndex, float spreadFactor)
+    {
+        List<int> quadIndices = new List<int>();
+        //int row = centerQuadIndex / AmountQuadsWidth + 1;
+        int column = centerQuadIndex % AmountQuadsWidth;
+
+        float currentAmountPedestrians = ++this.amountPedestriansPerQuad[centerQuadIndex];
+
+        try
+        {
+
+
+            //N4: above quad, below quad, right quad, left quad
+            //if (row - 1 != 0) //above row exists
+            if (centerQuadIndex - AmountQuadsWidth >= 0) //above row exists
+            {
+                quadIndices.Add(centerQuadIndex - AmountQuadsWidth);
+                //this.amountPedestriansPerQuad[centerQuadIndex - AmountQuadsWidth] += currentAmountPedestrians * spreadFactor;
+                this.amountPedestriansPerQuad[centerQuadIndex - AmountQuadsWidth] ++;
+            }
+            //if (row + 1 <= AmountQuadsHeight) //below row exists
+            if (centerQuadIndex + AmountQuadsWidth < AmountQuadsWidth * AmountQuadsHeight) //below row exists
+            {
+                quadIndices.Add(centerQuadIndex + AmountQuadsWidth);
+                //this.amountPedestriansPerQuad[centerQuadIndex + AmountQuadsWidth] += currentAmountPedestrians * spreadFactor;
+                this.amountPedestriansPerQuad[centerQuadIndex + AmountQuadsWidth] ++;
+            }
+            if (column - 1 >= 0) //left column exists
+            {
+                quadIndices.Add(centerQuadIndex - 1);
+                //this.amountPedestriansPerQuad[centerQuadIndex - 1] += currentAmountPedestrians * spreadFactor;
+                this.amountPedestriansPerQuad[centerQuadIndex - 1] ++;
+            }
+            if (column + 1 < AmountQuadsWidth) //right column exists
+            {
+                quadIndices.Add(centerQuadIndex + 1);
+                //this.amountPedestriansPerQuad[centerQuadIndex + 1] += currentAmountPedestrians * spreadFactor;
+                this.amountPedestriansPerQuad[centerQuadIndex + 1] ++;
+            }
+
+
+            return quadIndices;
+        }
+        catch (IndexOutOfRangeException e)
+        {
+            var msg = e.Message;
+            var data = e.Data;
+        }
+        return null;
+    }
+
+    public List<int> DecreaseAmountPedestrianAtIndexAndSurrounding(int centerQuadIndex, float spreadFactor)
+    {
+        List<int> quadIndices = new List<int>();
+        //int row = centerQuadIndex / AmountQuadsWidth + 1;
+        int column = centerQuadIndex % AmountQuadsWidth;
+
+        float previousAmountPedestrians = this.amountPedestriansPerQuad[centerQuadIndex]--;
+
+        try
+        {
+
+
+            //N4: above quad, below quad, right quad, left quad
+            //if (row - 1 != 0) //above row exists
+            if (centerQuadIndex - AmountQuadsWidth >= 0) //above row exists
+            {
+                quadIndices.Add(centerQuadIndex - AmountQuadsWidth);
+                //this.amountPedestriansPerQuad[centerQuadIndex - AmountQuadsWidth] -= previousAmountPedestrians * spreadFactor;
+                this.amountPedestriansPerQuad[centerQuadIndex - AmountQuadsWidth] --;
+            }
+            //if (row + 1 <= AmountQuadsHeight) //below row exists
+            if (centerQuadIndex + AmountQuadsWidth < AmountQuadsWidth * AmountQuadsHeight) //below row exists
+            {
+                quadIndices.Add(centerQuadIndex + AmountQuadsWidth);
+                //this.amountPedestriansPerQuad[centerQuadIndex + AmountQuadsWidth] -= previousAmountPedestrians * spreadFactor;
+                this.amountPedestriansPerQuad[centerQuadIndex + AmountQuadsWidth] --;
+            }
+            if (column - 1 >= 0) //left column exists
+            {
+                quadIndices.Add(centerQuadIndex - 1);
+                //this.amountPedestriansPerQuad[centerQuadIndex - 1] -= previousAmountPedestrians * spreadFactor;
+                this.amountPedestriansPerQuad[centerQuadIndex - 1] --;
+            }
+            if (column + 1 < AmountQuadsWidth) //right column exists
+            {
+                quadIndices.Add(centerQuadIndex + 1);
+                //this.amountPedestriansPerQuad[centerQuadIndex + 1] -= previousAmountPedestrians * spreadFactor;
+                this.amountPedestriansPerQuad[centerQuadIndex + 1] --;
+            }
+
+
+            return quadIndices;
+        }
+        catch (IndexOutOfRangeException e)
+        {
+            var msg = e.Message;
+            var data = e.Data;
+        }
+        return null;
     }
 
     public void IncreaseAmountPedestrianAtIndex(int index)

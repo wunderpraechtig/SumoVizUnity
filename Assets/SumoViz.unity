@@ -508,7 +508,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   FloorQuadSize: 1
   StairQuadSize: 1
-  MaxPedestriansOnQuad: 4
+  MaxPedestriansOnQuad: 3
 --- !u!1 &158559338
 GameObject:
   m_ObjectHideFlags: 0

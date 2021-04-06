@@ -509,7 +509,7 @@ public class FileLoader : MonoBehaviour
         }
 
         Vector3[] newVertices = new Vector3[amountVertices];
-        triangles = new int[amountVertices+(amountVertices/2)]; //6 entries per quad
+        triangles = new int[amountVertices + (amountVertices / 2)]; //6 entries per quad
         Vector3 startingPoint = topLeftVector; //take top left of the bounding box
 
         int currentVertex = 0;
