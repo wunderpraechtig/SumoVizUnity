@@ -335,7 +335,6 @@ public class FileLoader : MonoBehaviour
 
             var result = RecalculateVerticesAndIndecesForMesh(farLeft, farRight, nearLeft, heatmapHandler.StairQuadSize, out trianglesNew, out HeatmapData heatmapData);
 
-            heatmapHandler.AddToHeatmapData(heatmapData);
             //heatmapHandler.AddToStairsHeatmapData(heatmapData);
 
 
@@ -350,8 +349,8 @@ public class FileLoader : MonoBehaviour
             Vector2[] uvs = new Vector2[mesh_filter.mesh.vertices.Length];
             for (int j = 0; j < uvs.Length; j++)
             {
-                //uvs[i] = new Vector2(1f / 128f + 1f / 64f, 0); // the uv coordinate 1f / 128f + 1f / 64f is the first green pixel of the texture
                 uvs[j] = new Vector2(0, 0); // the uv coordinate 0,0 is a transparent part of the texture
+                uvs[j] = new Vector2(1f / 128f + 1f / 64f, 0); // the uv coordinate 1f / 128f + 1f / 64f is the first green pixel of the texture
             }
 
 
@@ -359,7 +358,9 @@ public class FileLoader : MonoBehaviour
 
             Mesh meshOfFilter = mesh_filter.mesh;
 
-            heatmapHandler.AddToHeatmapMeshes(ref meshOfFilter);
+            heatmapData.setHeatmapMesh(meshOfFilter);
+            //heatmapHandler.AddToHeatmapMeshes(ref meshOfFilter);
+            heatmapHandler.AddToHeatmapData(ref heatmapData);
             //heatmapHandler.AddToStairHeatmapMeshes(ref meshOfFilter);
 
             heatmapMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
@@ -400,57 +401,93 @@ public class FileLoader : MonoBehaviour
         foreach (var entry in meshesOnSameLevel)
         {
 
-
+            ++meshNo;
             var key = entry.Key;
             var value = entry.Value;
 
-            //for debugging purposes: this code instantiates all submeshes of the big floors mesh
-            //GameObject heatmapFloors = CreateCombinedMeshObject("HeatmapFloor" + (++meshNo), ref value, 11, gl.theme.getFloorMaterial());
+            //////////////////////////////
+            ////for debugging purposes: this code instantiates all submeshes of the big floors mesh
+            //GameObject heatmapFloors = CreateCombinedMeshObject("HeatmapFloor" + (meshNo), ref value, 11, gl.theme.getFloorMaterial());
             //heatmapFloors.transform.parent = HeatmapFloors.transform;
             //heatmapFloors.AddComponent<MeshCollider>();
             //MeshFilter tmpFilter = (MeshFilter)heatmapFloors.GetComponent("MeshFilter");
-
+            ///////////////////////////
             var combinedMesh = CombineMeshes(ref value);
 
-            GameObject realHeatmapMesh = new GameObject("HeatmapMesh" + (++meshNo), typeof(MeshFilter), typeof(MeshRenderer));
-            realHeatmapMesh.transform.parent = HeatmapFloors.transform;
-            MeshFilter mesh_filter2 = realHeatmapMesh.GetComponent<MeshFilter>();
+
 
             Bounds meshBounds = combinedMesh.bounds;
             //Bounds meshFilterBounds = tmpFilter.mesh.bounds;
 
-            int[] trianglesNew;
+            //int[] trianglesNew;
 
 
             var topleft = new Vector3(meshBounds.min.x, meshBounds.max.y, meshBounds.max.z);
             var topright = meshBounds.max;
             var bottomleft = meshBounds.min;
-            var result = RecalculateVerticesAndIndecesForMesh(topleft, topright, bottomleft, heatmapHandler.FloorQuadSize, out trianglesNew, out HeatmapData heatmapData);
+            var result = RecalculateVerticesAndIndecesForMesh(topleft, topright, bottomleft, heatmapHandler.FloorQuadSize, out int[] trianglesNew, out HeatmapData heatmapData);
 
 
-            heatmapHandler.AddToHeatmapData(heatmapData);
-            //heatmapHandler.AddToFloorsHeatmapData(heatmapData);
-            //PlainMeshGenerator gen = new PlainMeshGenerator();
+            //////////////////////
+            ////create mesh that equals the bounding box
 
-            //mesh_filter2.mesh = gen.generatePlainRectangularMesh(topleft, topright, bottomleft, heatmapHandler.QuadSize);
+            //GameObject meshFromBounds = new GameObject("HeatmapMeshBounds" + meshNo, typeof(MeshFilter), typeof(MeshRenderer));
+            //meshFromBounds.transform.parent = HeatmapFloors.transform;
+            //MeshFilter mesh_filter3 = meshFromBounds.GetComponent<MeshFilter>();
 
+            //Vector3[] verts = new Vector3[4];
+            //verts[0] = new Vector3(meshBounds.min.x, meshBounds.min.y, meshBounds.max.z);
+            //verts[1] = new Vector3(meshBounds.max.x, meshBounds.min.y, meshBounds.min.z);
+            //verts[2] = new Vector3(meshBounds.min.x, meshBounds.min.y, meshBounds.min.z);
+            //verts[3] = new Vector3(meshBounds.max.x, meshBounds.min.y, meshBounds.max.z);
+            //mesh_filter3.mesh.vertices = verts;
 
+            //int[] tris = new int[6];
+            //tris[0] = 0;
+            //tris[1] = 1;
+            //tris[2] = 2;
+            //tris[3] = 0;
+            //tris[4] = 3;
+            //tris[5] = 1;
+            //mesh_filter3.mesh.triangles = tris;
 
+            //Vector2[] uvss = new Vector2[4] { new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1)};
+            ////uvss[0] = new Vector2(0,0);
+            ////uvss[1] = new Vector2(0, 0);
+            ////uvss[2] = new Vector2(0, 0);
+            ////uvss[3] = new Vector2(0, 0);
+            //mesh_filter3.mesh.uv = uvss;
+
+            //meshFromBounds.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
+            //meshFromBounds.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            //meshFromBounds.layer = 11;
+            //meshFromBounds.transform.localPosition = new Vector3(0, 0, 0);
+            //meshFromBounds.transform.localScale = Vector3.one;
+            //meshFromBounds.transform.localRotation = Quaternion.Euler(0, 0, 0);
+
+            ///////////////////
+            GameObject realHeatmapMesh = new GameObject("HeatmapMesh" + meshNo, typeof(MeshFilter), typeof(MeshRenderer));
+            realHeatmapMesh.transform.parent = HeatmapFloors.transform;
+            MeshFilter mesh_filter2 = realHeatmapMesh.GetComponent<MeshFilter>();
             mesh_filter2.mesh.vertices = result;
             mesh_filter2.mesh.triangles = trianglesNew;
 
             Vector2[] uvs = new Vector2[mesh_filter2.mesh.vertices.Length];
             for (int i = 0; i < uvs.Length; i++)
             {
-                //uvs[i] = new Vector2(1f / 128f + 1f / 64f, 0); // the uv coordinate 1f / 128f + 1f / 64f is the first green pixel of the texture
                 uvs[i] = new Vector2(0, 0); // the uv coordinate 0,0 is a transparent part of the texture
+                uvs[i] = new Vector2(1f / 128f + 1f / 64f, 0); // the uv coordinate 1f / 128f + 1f / 64f is the first green pixel of the texture
+
             }
 
             mesh_filter2.mesh.uv = uvs;
             Mesh meshOfFilter = mesh_filter2.mesh;
+            //meshOfFilter.triangles = trianglesNew;
 
-            heatmapHandler.AddToHeatmapMeshes(ref meshOfFilter);
+            //heatmapHandler.AddToHeatmapMeshes(ref meshOfFilter);
+            heatmapData.setHeatmapMesh(meshOfFilter);
             //heatmapHandler.AddToFloorHeatmapMeshes(ref meshOfFilter);
+            heatmapHandler.AddToHeatmapData(ref heatmapData);
 
             realHeatmapMesh.GetComponent<Renderer>().material = (Material)Resources.Load("Heatmap/HeatmapVisual", typeof(Material));
             realHeatmapMesh.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -493,6 +530,11 @@ public class FileLoader : MonoBehaviour
 
         //how many vertices will there be in the end? per quad we have 4 vertices (3 vertices per triangle, but 2 vertices are common in both triangles and we need 2 triangles per quad)
         int amountVertices = amountQuadsWidth * 4 * amountQuadsLength;
+
+
+        ////remove!
+        //sizeEdgeQuadsX = sizeEdgeQuadsZ = 0;
+        ////remove!
 
         if (sizeEdgeQuadsX != 0)
         {
@@ -537,7 +579,7 @@ public class FileLoader : MonoBehaviour
                 triangles[currentTriangle++] = 1 + (currentTriangleSetNo * 4);
                 currentTriangleSetNo++;
 
-                startingPoint = startingPoint + size * widthVectorNormalized; //TODO: davor length vector, ist width richtig korrigiert?
+                startingPoint = startingPoint + size * widthVectorNormalized; //move to the right
             }
 
             if (sizeEdgeQuadsX != 0)
@@ -569,11 +611,11 @@ public class FileLoader : MonoBehaviour
         //look whether a last row of not fully sized quads is needed
         if (sizeEdgeQuadsZ != 0)
         {
-            int startIndex = amountVertices - (amountQuadsWidth * 4); //or do it with currentVertex!
-            if (sizeEdgeQuadsX != 0)
-            {
-                startIndex -= 4;
-            }
+            //int startIndex = amountVertices - (amountQuadsWidth * 4); //or do it with currentVertex!
+            //if (sizeEdgeQuadsX != 0)
+            //{
+            //    startIndex -= 4;
+            //}
             for (int i = 0; i < amountQuadsWidth; i++)
             {
 
@@ -616,11 +658,16 @@ public class FileLoader : MonoBehaviour
 
             }
         }
-
-        //for (int i = 0; i < amountVertices; i++)
+        //currentTriangleSetNo = 0;
+        //for (int i = 0; i < amountVertices + (amountVertices / 2); i += 6)
         //{
         //    //0,1,2 and then 0,3,1
-        //    triangles[i] = i;
+        //    triangles[i] = 0 + (currentTriangleSetNo * 4);
+        //    triangles[i + 1] = 1 + (currentTriangleSetNo * 4);
+        //    triangles[i + 1] = 2 + (currentTriangleSetNo * 4);
+        //    triangles[i + 1] = 0 + (currentTriangleSetNo * 4);
+        //    triangles[i + 1] = 3 + (currentTriangleSetNo * 4);
+        //    triangles[i + 1] = 1 + (currentTriangleSetNo++ * 4);
         //}
         startingPoint = topLeftVector;
         //fill in all the information into the HeatmapHandler

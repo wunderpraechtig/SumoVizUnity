@@ -16,9 +16,11 @@ public class HeatmapData
     private Plane plane;
     private float Width, Length;
     private int AmountQuadsWidth, AmountQuadsHeight; // amount of quads with considering the potential edge quads
-    public float[] amountPedestriansPerQuad;
     private float PedestrianHeightTolerance;
     private float quadSize;
+
+    public float[] amountPedestriansPerQuad;
+    private Mesh HeatmapMesh;
 
 
 
@@ -45,6 +47,11 @@ public class HeatmapData
         }
     }
 
+    public void setHeatmapMesh(Mesh heatmapMesh)
+    {
+        this.HeatmapMesh = heatmapMesh;
+    }
+
     public List<int> IncreaseAmountPedestrianAtIndexAndSurrounding(int centerQuadIndex, float spreadFactor)
     {
         List<int> quadIndices = new List<int>();
@@ -63,26 +70,26 @@ public class HeatmapData
             {
                 quadIndices.Add(centerQuadIndex - AmountQuadsWidth);
                 //this.amountPedestriansPerQuad[centerQuadIndex - AmountQuadsWidth] += currentAmountPedestrians * spreadFactor;
-                this.amountPedestriansPerQuad[centerQuadIndex - AmountQuadsWidth] ++;
+                this.amountPedestriansPerQuad[centerQuadIndex - AmountQuadsWidth]++;
             }
             //if (row + 1 <= AmountQuadsHeight) //below row exists
             if (centerQuadIndex + AmountQuadsWidth < AmountQuadsWidth * AmountQuadsHeight) //below row exists
             {
                 quadIndices.Add(centerQuadIndex + AmountQuadsWidth);
                 //this.amountPedestriansPerQuad[centerQuadIndex + AmountQuadsWidth] += currentAmountPedestrians * spreadFactor;
-                this.amountPedestriansPerQuad[centerQuadIndex + AmountQuadsWidth] ++;
+                this.amountPedestriansPerQuad[centerQuadIndex + AmountQuadsWidth]++;
             }
             if (column - 1 >= 0) //left column exists
             {
                 quadIndices.Add(centerQuadIndex - 1);
                 //this.amountPedestriansPerQuad[centerQuadIndex - 1] += currentAmountPedestrians * spreadFactor;
-                this.amountPedestriansPerQuad[centerQuadIndex - 1] ++;
+                this.amountPedestriansPerQuad[centerQuadIndex - 1]++;
             }
             if (column + 1 < AmountQuadsWidth) //right column exists
             {
                 quadIndices.Add(centerQuadIndex + 1);
                 //this.amountPedestriansPerQuad[centerQuadIndex + 1] += currentAmountPedestrians * spreadFactor;
-                this.amountPedestriansPerQuad[centerQuadIndex + 1] ++;
+                this.amountPedestriansPerQuad[centerQuadIndex + 1]++;
             }
 
 
@@ -99,7 +106,6 @@ public class HeatmapData
     public List<int> DecreaseAmountPedestrianAtIndexAndSurrounding(int centerQuadIndex, float spreadFactor)
     {
         List<int> quadIndices = new List<int>();
-        //int row = centerQuadIndex / AmountQuadsWidth + 1;
         int column = centerQuadIndex % AmountQuadsWidth;
 
         float previousAmountPedestrians = this.amountPedestriansPerQuad[centerQuadIndex]--;
@@ -114,26 +120,26 @@ public class HeatmapData
             {
                 quadIndices.Add(centerQuadIndex - AmountQuadsWidth);
                 //this.amountPedestriansPerQuad[centerQuadIndex - AmountQuadsWidth] -= previousAmountPedestrians * spreadFactor;
-                this.amountPedestriansPerQuad[centerQuadIndex - AmountQuadsWidth] --;
+                this.amountPedestriansPerQuad[centerQuadIndex - AmountQuadsWidth]--;
             }
             //if (row + 1 <= AmountQuadsHeight) //below row exists
             if (centerQuadIndex + AmountQuadsWidth < AmountQuadsWidth * AmountQuadsHeight) //below row exists
             {
                 quadIndices.Add(centerQuadIndex + AmountQuadsWidth);
                 //this.amountPedestriansPerQuad[centerQuadIndex + AmountQuadsWidth] -= previousAmountPedestrians * spreadFactor;
-                this.amountPedestriansPerQuad[centerQuadIndex + AmountQuadsWidth] --;
+                this.amountPedestriansPerQuad[centerQuadIndex + AmountQuadsWidth]--;
             }
             if (column - 1 >= 0) //left column exists
             {
                 quadIndices.Add(centerQuadIndex - 1);
                 //this.amountPedestriansPerQuad[centerQuadIndex - 1] -= previousAmountPedestrians * spreadFactor;
-                this.amountPedestriansPerQuad[centerQuadIndex - 1] --;
+                this.amountPedestriansPerQuad[centerQuadIndex - 1]--;
             }
             if (column + 1 < AmountQuadsWidth) //right column exists
             {
                 quadIndices.Add(centerQuadIndex + 1);
                 //this.amountPedestriansPerQuad[centerQuadIndex + 1] -= previousAmountPedestrians * spreadFactor;
-                this.amountPedestriansPerQuad[centerQuadIndex + 1] --;
+                this.amountPedestriansPerQuad[centerQuadIndex + 1]--;
             }
 
 
@@ -157,6 +163,19 @@ public class HeatmapData
         this.amountPedestriansPerQuad[index] = this.amountPedestriansPerQuad[index] - 1;
     }
 
+    public void UpdateUVsAtIndex(int quadIndex, float maxPedestriansOnQuad)
+    {
+        float amountPedestrians = amountPedestriansPerQuad[quadIndex];
+        var currentUVs = HeatmapMesh.uv;
+        int vertexStartIndex = quadIndex * 4;
+        float xUV = 1f * (amountPedestrians / maxPedestriansOnQuad) + 1f / 128f;
+
+        for (int i = 0; i < 4; i++)
+        {
+            currentUVs[vertexStartIndex++] = new Vector2(xUV, 0); //texture is 64*1. you should always take the middle of the pixel!
+        }
+        this.HeatmapMesh.uv = currentUVs;
+    }
 
     public bool MeshIsOnSameHeight(Vector3 pedestrianPosition)
     {
@@ -165,7 +184,6 @@ public class HeatmapData
         {
             return true;
         }
-
         return false;
     }
 
