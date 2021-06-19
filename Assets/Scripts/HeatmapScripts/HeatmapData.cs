@@ -168,11 +168,13 @@ public class HeatmapData
         float amountPedestrians = amountPedestriansPerQuad[quadIndex];
         var currentUVs = HeatmapMesh.uv;
         int vertexStartIndex = quadIndex * 4;
-        float xUV = 1f * (amountPedestrians / maxPedestriansOnQuad) + 1f / 128f;
+        float xUV;
+
+        xUV = 1f * (amountPedestrians / maxPedestriansOnQuad) + 1f / 128f;
 
         for (int i = 0; i < 4; i++)
         {
-            currentUVs[vertexStartIndex++] = new Vector2(xUV, 0); //texture is 64*1. you should always take the middle of the pixel!
+            currentUVs[vertexStartIndex++] = new Vector2(xUV, 0); 
         }
         this.HeatmapMesh.uv = currentUVs;
     }
@@ -187,46 +189,18 @@ public class HeatmapData
         return false;
     }
 
-    public int GetQuadIndexFromCoords(float xCoord, float zCoord, float quadSize) //TODO: rename since it also changes the list!, TODO: exception
-    {
-        float farthestZCoord;
-        farthestZCoord = StartingPoint.z >= FarRight.z ? StartingPoint.z : FarRight.z;
-        if (xCoord < StartingPoint.x || zCoord > farthestZCoord) //if it is not within these, its definitely not in the plane of the stair
-        {
-            //return null; //in this case, the x and/or z Coord lies outside of the mesh. That actually shouldnt happen ..
-            return -1; //TODO: take care of this! happens in osloer
-        }
-        //Ray ray = new Ray();
-
-
-        float distanceToLeftEdge = xCoord - StartingPoint.x;
-        int xOffset = (int)(distanceToLeftEdge / this.quadSize); //cast to int!
-
-        float distanceToTopEdge = StartingPoint.z - zCoord;
-        int zOffset = (int)(distanceToTopEdge / this.quadSize); //cast to int!
-
-
-        int resultingIndex = ((AmountQuadsWidth * zOffset) + xOffset);
-
-
-
-        return resultingIndex; // per quad we have 6 vertices - therefore we need to multiply the result with 6!
-    }
-
     public int GetQuadIndexFromCoords(Vector3 position) //TODO: rename since it also changes the list!, TODO: exception
     {
         float farthestZCoord = StartingPoint.z >= FarRight.z ? StartingPoint.z : FarRight.z;
         float leftMostXCoord = StartingPoint.x <= NearLeft.x ? StartingPoint.x : NearLeft.x;
         if (position.x < leftMostXCoord || position.z > farthestZCoord) //if it is not within these, its definitely not in the plane of the stair
         {
-            //return null; //in this case, the x and/or z Coord lies outside of the mesh. That actually shouldnt happen ..
-            return -1; //TODO: take care of this! happens in osloer
+            return -1; 
         }
 
         //important first step: position needs to be put relative to starting point!!!
 
         Vector3 movedPosition = position - StartingPoint;
-        //Vector3 movedPosition2 = StartingPoint - position;
 
         Vector3 projectionWidth = Vector3.Project(movedPosition, WidthVector);
         Vector3 projectionLength = Vector3.Project(movedPosition, LengthVector);
@@ -241,43 +215,7 @@ public class HeatmapData
 
         int resultingIndex = ((AmountQuadsWidth * zOffset) + xOffset);
 
-
-        //float distanceToLeftEdgeOld = position.x - StartingPoint.x;
-
-        //int xOffsetOld = (int)(distanceToLeftEdge / quadSize); //cast to int!
-
-        //float distanceToTopEdgeOld = StartingPoint.z - position.z;
-        //int zOffsetOld = (int)(distanceToTopEdge / quadSize); //cast to int!
-
-
-        //int resultingIndexOld = ((AmountQuadsWidth * zOffset) + xOffset);
-
-
-
         return resultingIndex; // per quad we have 6 vertices - therefore we need to multiply the result with 6!
     }
-    //public int GetQuadIndexFromCoordsStairs(Vector3 position, float quadSize) //TODO: rename since it also changes the list!, TODO: exception
-    //{
-
-
-    //    float farthestZCoord;
-    //    farthestZCoord = StartingPoint.z >= FarRight.z ? StartingPoint.z : FarRight.z;
-    //    if (position.x < StartingPoint.x || position.z > farthestZCoord) //if it is not within these, its definitely not in the plane of the stair
-    //    {
-    //        //return null; //in this case, the x and/or z Coord lies outside of the mesh. That actually shouldnt happen ..
-    //        return -1; //TODO: take care of this! happens in osloer
-    //    }
-
-
-    //    Vector3 projectionWidth = Vector3.Project(position, WidthVector);
-    //    Vector3 projectionLength = Vector3.Project(position, LengthVector);
-
-    //    if(projectionWidth.magnitude > Width || projectionLength.magnitude > Length)
-    //    {
-    //        //we are outside of this mesh
-    //    }
-
-    //    return 0;
-    //}
 
 }
