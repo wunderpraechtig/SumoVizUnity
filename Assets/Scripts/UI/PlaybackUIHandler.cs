@@ -18,6 +18,7 @@ public class PlaybackUIHandler : MonoBehaviour
     [SerializeField] private Toggle toggleHighlightSpeed = null;
     [SerializeField] private Toggle toggleHighlightDensity = null;
     [SerializeField] private Toggle toggleShowTrajectories = null;
+    [SerializeField] private Toggle toggleShowHeatmap = null;
     private System.TimeSpan timeSpan;
     const string format = @"mm\:ss\.ff";
 
@@ -29,6 +30,7 @@ public class PlaybackUIHandler : MonoBehaviour
         EnableDensityThresholdFields(false);
         gameState.isPlayingEvent += OnIsPlayingChanged;
         gameState.trajectoryModeEvent += OnTrajectoryModeChanged;
+        gameState.heatmapModeEvent += OnHeatmapModeChanged;
         gameState.coloringModeEvent += OnPawnColoringModeChanged;
         gameState.densityThresholdEvent += OnDensityThresholdChanged;
         gameState.currentTimeEvent += OnCurrentTimeChanged;
@@ -69,6 +71,11 @@ public class PlaybackUIHandler : MonoBehaviour
         toggleHighlightDensity.SetIsOnWithoutNotify(newDensityState);
         toggleHighlightSpeed.SetIsOnWithoutNotify(newSpeedState);
         EnableDensityThresholdFields(newDensityState);
+    }
+
+    private void OnHeatmapModeChanged(bool value)
+    {
+        toggleShowHeatmap.SetIsOnWithoutNotify(value);
     }
 
     private void OnTrajectoryModeChanged(bool value)
@@ -140,6 +147,12 @@ public class PlaybackUIHandler : MonoBehaviour
     public void HandleToggleShowTrajectories()
     {
         gameState.IsShowingTrajectories = toggleShowTrajectories.isOn;
+    }
+
+    public void HandleToggleShowHeatmap()
+    {
+        gameState.IsShowingHeatmap = toggleShowHeatmap.isOn;
+
     }
 
     public void HandleSliderDensityThreshold()

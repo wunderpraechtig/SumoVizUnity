@@ -17,30 +17,12 @@ public class HeatmapHandler : MonoBehaviour
         HeatmapData = new List<HeatmapData>();
     }
 
-    //public void AddToHeatmapMeshes(ref Mesh singleMesh)
-    //{
-    //    this.HeatmapMeshes.Add(singleMesh);
-    //}
-
     public void AddToHeatmapData(ref HeatmapData data)
     {
         this.HeatmapData.Add(data);
 
     }
 
-    //private void UpdateUVsAtIndex(ref List<HeatmapData> heatmapData, ref List<Mesh> meshes, int indexMesh, int quadIndex)
-    //{
-    //    float amountPedestrians = heatmapData[indexMesh].amountPedestriansPerQuad[quadIndex];
-    //    var currentUVs = meshes[indexMesh].uv;
-    //    int vertexStartIndex = quadIndex * 4;
-    //    float xUV = 1f * (amountPedestrians / MaxPedestriansOnQuad) + 1f / 128f;
-
-    //    for (int i = 0; i < 4; i++)
-    //    {
-    //        currentUVs[vertexStartIndex++] = new Vector2(xUV, 0); //texture is 64*1. you should always take the middle of the pixel!
-    //    }
-    //    meshes[indexMesh].uv = currentUVs;
-    //}
 
     public void AddPedestrianToMultipleQuads(int meshIndex, int centerQuadIndex)
     {
@@ -95,6 +77,14 @@ public class HeatmapHandler : MonoBehaviour
         quadIndex = -1;
         meshIndex = -1;
         return false;
+    }
+
+    public void clearHeatmaps()
+    {
+        foreach(var entry in HeatmapData)
+        {
+            entry.resetUVs();
+        }
     }
 
 

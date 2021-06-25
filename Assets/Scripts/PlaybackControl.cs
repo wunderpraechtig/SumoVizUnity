@@ -31,6 +31,12 @@ public class PlaybackControl : MonoBehaviour
         get { return gameState.IsShowingTrajectories; }
         set { gameState.IsShowingTrajectories = value; }
     }
+    public bool heatmapShown
+    {
+        get { return gameState.IsShowingHeatmap; }
+        set { gameState.IsShowingHeatmap = value; }
+    }
+
     public float threshold {
         get { return gameState.DensityThreshold; }
         set { gameState.DensityThreshold = value; }

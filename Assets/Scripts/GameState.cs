@@ -11,6 +11,7 @@ public class GameState : MonoBehaviour
     [SerializeField] private float totalTime;
     [SerializeField] private TileColoringMode pawnColoringMode = TileColoringMode.TileColoringNone;
     [SerializeField] private bool trajectoriesShown;
+    [SerializeField] private bool heatmapShown;
     [SerializeField] private float densityThreshold;
 
     public event Action<bool> isPlayingEvent;
@@ -18,6 +19,7 @@ public class GameState : MonoBehaviour
     public event Action<float> totalTimeEvent;
     public event Action<TileColoringMode> coloringModeEvent;
     public event Action<bool> trajectoryModeEvent;
+    public event Action<bool> heatmapModeEvent;
     public event Action<float> densityThresholdEvent;
 
     private void Start()
@@ -27,6 +29,7 @@ public class GameState : MonoBehaviour
         totalTimeEvent.Invoke(totalTime);
         coloringModeEvent.Invoke(pawnColoringMode);
         trajectoryModeEvent.Invoke(trajectoriesShown);
+        heatmapModeEvent.Invoke(heatmapShown);
         densityThresholdEvent.Invoke(densityThreshold);
 
         Physics.IgnoreLayerCollision(10, 11);
@@ -87,6 +90,19 @@ public class GameState : MonoBehaviour
             {
                 trajectoriesShown = value;
                 trajectoryModeEvent.Invoke(value);
+            }
+        }
+    }
+
+    public bool IsShowingHeatmap
+    {
+        get { return heatmapShown; }
+        set
+        {
+            if (value != heatmapShown)
+            {
+                heatmapShown = value;
+                heatmapModeEvent.Invoke(value);
             }
         }
     }

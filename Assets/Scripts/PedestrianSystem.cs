@@ -23,12 +23,15 @@ public class PedestrianSystem : MonoBehaviour
     {
         gameState.isPlayingEvent += OnIsPlayingChanged;
         gameState.trajectoryModeEvent += OnShowTrajectoriesChanged;
+        gameState.heatmapModeEvent += OnShowHeatmapChanged;
 
         for (int i = 0; i < initialPoolSize; ++i)
         {
             CreatePoolObject();
         }
     }
+
+
 
     private void OnIsPlayingChanged(bool isPlaying)
     {
@@ -151,7 +154,7 @@ public class PedestrianSystem : MonoBehaviour
                 }
 
                 poolObject.obj.transform.localPosition = newPosition;
-                if (true) //if heatmap stuff is shown in the simulation //TODO!
+                if (gameState.IsShowingHeatmap) //if heatmap stuff is shown in the simulation //TODO!
                 {
                     if (heatmapHandler.GetAffectedIndeces(newPosition, out int meshIndex, out int quadIndex)) //this is very costy. is true if pedestrian is on a floor quad
                     {
@@ -248,5 +251,13 @@ public class PedestrianSystem : MonoBehaviour
             {
                 entry.poolObject.trajectoryRenderer.enabled = false;
             }
+    }
+
+    private void OnShowHeatmapChanged(bool show)
+    {
+        if (!show)
+        {
+            heatmapHandler.clearHeatmaps();
+        }
     }
 }

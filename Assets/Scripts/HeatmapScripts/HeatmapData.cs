@@ -174,7 +174,7 @@ public class HeatmapData
 
         for (int i = 0; i < 4; i++)
         {
-            currentUVs[vertexStartIndex++] = new Vector2(xUV, 0); 
+            currentUVs[vertexStartIndex++] = new Vector2(xUV, 0);
         }
         this.HeatmapMesh.uv = currentUVs;
     }
@@ -195,7 +195,7 @@ public class HeatmapData
         float leftMostXCoord = StartingPoint.x <= NearLeft.x ? StartingPoint.x : NearLeft.x;
         if (position.x < leftMostXCoord || position.z > farthestZCoord) //if it is not within these, its definitely not in the plane of the stair
         {
-            return -1; 
+            return -1;
         }
 
         //important first step: position needs to be put relative to starting point!!!
@@ -216,6 +216,18 @@ public class HeatmapData
         int resultingIndex = ((AmountQuadsWidth * zOffset) + xOffset);
 
         return resultingIndex; // per quad we have 6 vertices - therefore we need to multiply the result with 6!
+    }
+
+    public void resetUVs()
+    {
+        Vector2[] clearUVs = new Vector2[(HeatmapMesh.uv.Length)];
+        foreach (var entry in clearUVs)
+        {
+            var current = entry;
+            current.x = 0;
+            current.y = 0;
+        }
+        HeatmapMesh.uv = clearUVs;
     }
 
 }
