@@ -2,7 +2,7 @@
 
 3D visualization of trajectories and geometries and heat map of crowd simulation software (Optimized for `JuPedSim` and 3D Geometries) 
 
-![alt text](https://github.com/wunderpraechtig/SumoVizUnity/blob/main/imageSingleQuads.PNG "Heat map with coloring of single cells.")
+![alt text](https://github.com/wunderpraechtig/SumoVizUnity/blob/main/imageSingleQuads.PNG "Heat map with coloring of single cells")
 
 ![alt text](https://github.com/wunderpraechtig/SumoVizUnity/blob/main/imageMultiQuads.PNG?raw=true "Heat map with coloring of multiple cells")
 
