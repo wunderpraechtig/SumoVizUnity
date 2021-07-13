@@ -1,10 +1,10 @@
 # SumoVizUnity
 
-3D visualization of trajectories and geometries of crowd simulation software in virtual reality (Optimized for `JuPedSim` and 3D Geometries)
+3D visualization of trajectories and geometries of crowd simulation software (Optimized for `JuPedSim` and 3D Geometries)
 
-![alt text](https://raw.githubusercontent.com/nachtmarv/SumoVizUnity/master/image_miniature_.jpg "Miniature View of a JPS dataset")
+![alt text](https://github.com/wunderpraechtig/SumoVizUnity/blob/main/imageSingleQuads.PNG "Heat map with coloring of single cells.")
 
-![alt text](https://raw.githubusercontent.com/nachtmarv/SumoVizUnity/master/image_realsize.jpg "Standing in the middle of the simulation")
+![alt text](https://github.com/wunderpraechtig/SumoVizUnity/blob/main/imageMultiQuads.PNG?raw=true "Heat map with coloring of multiple cells")
 
 
 ## License
